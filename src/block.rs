@@ -51,7 +51,7 @@ impl Block {
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_millis();
         let mut block = Block {
-            Header: String::new(),
+            Header: String::from("This is header"),
             timestamp,
             transactions,
             prev_block_hash,
