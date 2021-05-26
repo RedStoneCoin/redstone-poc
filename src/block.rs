@@ -15,9 +15,11 @@ const TARGET_HEXS: usize = 4;
 /// Block keeps block headers
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Block {
+    Header: String,
     timestamp: u128,
     transactions: Vec<Transaction>,
     prev_block_hash: String,
+    prev_hash_other: String,
     hash: String,
     nonce: i32,
     height: i32,
@@ -31,6 +33,9 @@ impl Block {
     pub fn get_prev_hash(&self) -> String {
         self.prev_block_hash.clone()
     }
+
+
+
 
     pub fn get_transaction(&self) -> &Vec<Transaction> {
         &self.transactions
@@ -50,10 +55,12 @@ impl Block {
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_millis();
         let mut block = Block {
+            Header: String::new(),
             timestamp,
             transactions,
             prev_block_hash,
             hash: String::new(),
+            prev_hash_other: String::new(),
             nonce: 0,
             height,
         };
@@ -72,6 +79,10 @@ impl Block {
         while !self.validate()? {
             self.nonce += 1;
         }
+            /*
+          if chain 1 
+             header = "chain1"
+          */
         let data = self.prepare_hash_data()?;
         let mut hasher = Sha256::new();
         hasher.input(&data[..]);
