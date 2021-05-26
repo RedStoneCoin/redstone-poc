@@ -9,3 +9,7 @@
 - When validating chains open newest db from both chains and validate
 - In block stuct insert hedder and prev hash other
 - Added node saving to database by heder egg if heder 1 save to chain 1 database.
+### done
+- Simple p2p implemetation of blockchain
+- Signing with wallet and sending txt to the blockchain
+- Simple node
