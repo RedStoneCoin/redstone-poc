@@ -161,29 +161,25 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
     let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
 
-   
     if mine_now {
-        if (chain == 1){
+        if (chain == 2){
+            println!("Chain 2 not avable yet");
+            println!("TX failed!");
+        }
+        if (chain == 1) {
         let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
         let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
         utxo_set.update(&new_block)?;
-        }
-        if (chain == 2){ 
-            let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
-            let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1])?;
-            utxo_set1.update(&new_block)?;
+        println!("success!");
         }
 
     } else {
-        if (chain == 1){
+       
         Server::send_transaction(&tx, utxo_set)?;
-        }
-        if (chain == 2){
-            Server::send_transaction(&tx, utxo_set1)?;
-        }
+
     }
 
-    println!("success!");
+   
     Ok(())
 }
 
