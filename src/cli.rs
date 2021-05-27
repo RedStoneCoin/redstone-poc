@@ -138,6 +138,12 @@ impl Cli {
             let utxo_set = UTXOSet { blockchain: bc };
             let server = Server::new(port, address, utxo_set)?;
             server.start_server()?;
+            let bc1 = Blockchain::new2()?;
+            let utxo_set1 = UTXOSet { blockchain: bc1 };
+            let server1 = Server::new(port, address, utxo_set1)?;
+            server1.start_server()?;
+            //this should start node on both server if not we will start in in a thread
+
         }
 
         Ok(())
@@ -146,19 +152,35 @@ impl Cli {
 
 fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Result<()> {
     let bc = Blockchain::new()?;
+    let bc1 = Blockchain::new2()?;
     let mut utxo_set = UTXOSet { blockchain: bc };
+    let mut utxo_set1 = UTXOSet { blockchain: bc1 };
+
     let wallets = Wallets::new()?;
     let wallet = wallets.get_wallet(from).unwrap();
     let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
+    let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
+
    
     if mine_now {
-
+        if (chain == 1){
         let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
         let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
         utxo_set.update(&new_block)?;
+        }
+        if (chain == 2){ 
+            let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
+            let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1])?;
+            utxo_set1.update(&new_block)?;
+        }
 
     } else {
+        if (chain == 1){
         Server::send_transaction(&tx, utxo_set)?;
+        }
+        if (chain == 2){
+            Server::send_transaction(&tx, utxo_set1)?;
+        }
     }
 
     println!("success!");
