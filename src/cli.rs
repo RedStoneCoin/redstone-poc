@@ -78,6 +78,7 @@ impl Cli {
         } else if let Some(ref matches) = matches.subcommand_matches("createblockchain") {
             if let Some(address) = matches.value_of("address") {
                 cmd_create_blockchain(address)?;
+                cmd_create_blockchain1(address)?;
             }
         } else if let Some(ref matches) = matches.subcommand_matches("send") {
             let from = if let Some(address) = matches.value_of("from") {
@@ -175,6 +176,15 @@ fn cmd_create_blockchain(address: &str) -> Result<()> {
     let utxo_set = UTXOSet { blockchain: bc };
     utxo_set.reindex()?;
     println!("create blockchain");
+    Ok(())
+}
+fn cmd_create_blockchain1(address: &str) -> Result<()> {
+    let address = String::from(address);
+    let bc = Blockchain::create_blockchain1(address)?;
+
+    let utxo_set = UTXOSet { blockchain: bc };
+    utxo_set.reindex()?;
+    println!("create blockchain 2");
     Ok(())
 }
 

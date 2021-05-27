@@ -42,7 +42,23 @@ impl Blockchain {
         };
         Ok(Blockchain { tip: lasthash, db })
     }
+    pub fn create_blockchain1(address: String) -> Result<Blockchain> {
+        info!("Creating new blockchain 1");
 
+        std::fs::remove_dir_all("data2/blocks").ok();
+        let db = sled::open("data2/blocks")?;
+        debug!("Creating new block database");
+        let cbtx = Transaction::new_coinbase(address, String::from(GENESIS_COINBASE_DATA))?;
+        let genesis: Block = Block::new_genesis_block(cbtx);
+        db.insert(genesis.get_hash(), serialize(&genesis)?)?;
+        db.insert("LAST", genesis.get_hash().as_bytes())?;
+        let bc = Blockchain {
+            tip: genesis.get_hash(),
+            db,
+        };
+        bc.db.flush()?;
+        Ok(bc)
+    }
     /// CreateBlockchain creates a new blockchain DB
     pub fn create_blockchain(address: String) -> Result<Blockchain> {
         info!("Creating new blockchain");
