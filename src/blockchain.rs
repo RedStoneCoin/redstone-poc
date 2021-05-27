@@ -42,6 +42,22 @@ impl Blockchain {
         };
         Ok(Blockchain { tip: lasthash, db })
     }
+    pub fn new2() -> Result<Blockchain> {
+        info!("open blockchain 2");
+
+        let db = sled::open("data2/blocks")?;
+        let hash = match db.get("LAST")? {
+            Some(l) => l.to_vec(),
+            None => Vec::new(),
+        };
+        info!("Found block database");
+        let lasthash = if hash.is_empty() {
+            String::new()
+        } else {
+            String::from_utf8(hash.to_vec())?
+        };
+        Ok(Blockchain { tip: lasthash, db })
+    }
     pub fn create_blockchain1(address: String) -> Result<Blockchain> {
         info!("Creating new blockchain 1");
 
@@ -102,6 +118,7 @@ impl Blockchain {
         self.tip = newblock.get_hash();
         Ok(newblock)
     }
+
 
     /// Iterator returns a BlockchainIterat
     pub fn iter(&self) -> BlockchainIterator {

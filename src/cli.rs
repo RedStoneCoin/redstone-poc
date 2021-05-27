@@ -55,9 +55,8 @@ impl Cli {
                     .arg(Arg::from_usage("<from> 'Source wallet address'"))
                     .arg(Arg::from_usage("<to> 'Destination wallet address'"))
                     .arg(Arg::from_usage("<amount> 'Amount to send'"))
-                    .arg(Arg::from_usage(
-                        "-m --mine 'the from address mine immediately'",
-                    )),
+                    .arg(Arg::from_usage("<chain> 'Send to what chain'"))
+                    .arg(Arg::from_usage("-m --mine 'the from address mine immediately'",)),
             )
             .get_matches();
 
@@ -70,6 +69,8 @@ impl Cli {
             println!("address: {}", cmd_create_wallet()?);
         } else if let Some(_) = matches.subcommand_matches("printchain") {
             cmd_print_chain()?;
+            println!("Chain 2");
+            cmd_print_chain2()?;
         } else if let Some(_) = matches.subcommand_matches("reindex") {
             let count = cmd_reindex()?;
             println!("Done! There are {} transactions in the UTXO set.", count);
@@ -95,14 +96,21 @@ impl Cli {
             };
             let amount: i32 = if let Some(amount) = matches.value_of("amount") {
                 amount.parse()?
+
             } else {
                 println!("amount in send not supply!: usage\n{}", matches.usage());
                 exit(1)
             };
-            if matches.is_present("mine") {
-                cmd_send(from, to, amount, true)?;
+            let chain: i32 = if let Some(chain) = matches.value_of("chain") {
+                chain.parse()?
             } else {
-                cmd_send(from, to, amount, false)?;
+                println!("Chain is bad!: usage\n{}", matches.usage());
+                exit(1)
+            };
+            if matches.is_present("mine") {
+                cmd_send(from, to, amount, true, chain)?;
+            } else {
+                cmd_send(from, to, amount, false, chain)?;
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startnode") {
             if let Some(port) = matches.value_of("port") {
@@ -136,17 +144,19 @@ impl Cli {
     }
 }
 
-fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool) -> Result<()> {
+fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Result<()> {
     let bc = Blockchain::new()?;
     let mut utxo_set = UTXOSet { blockchain: bc };
     let wallets = Wallets::new()?;
     let wallet = wallets.get_wallet(from).unwrap();
     let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
+   
     if mine_now {
+
         let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
         let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
-
         utxo_set.update(&new_block)?;
+
     } else {
         Server::send_transaction(&tx, utxo_set)?;
     }
@@ -154,6 +164,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool) -> Result<()> {
     println!("success!");
     Ok(())
 }
+
 
 fn cmd_create_wallet() -> Result<String> {
     let mut ws = Wallets::new()?;
@@ -202,13 +213,27 @@ fn cmd_get_balance(address: &str) -> Result<i32> {
 }
 
 fn cmd_print_chain() -> Result<()> {
+    info!("chain 1");
     let bc = Blockchain::new()?;
     for b in bc.iter() {
         println!("{:#?}", b);
     }
+    info!("chain 2");
+    let bc1 = Blockchain::new2()?;
+    for b in bc1.iter() {
+        println!("{:#?}", b);
+    }
     Ok(())
 }
+fn cmd_print_chain2() -> Result<()> {
 
+    info!("chain 2");
+    let bc1 = Blockchain::new2()?;
+    for b in bc1.iter() {
+        println!("{:#?}", b);
+    }
+    Ok(())
+}
 fn cmd_list_address() -> Result<()> {
     let ws = Wallets::new()?;
     let addresses = ws.get_all_addresses();

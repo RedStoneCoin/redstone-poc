@@ -21,7 +21,7 @@ fn main() {
     print!("Commands:\n");
     print!(">createwallet\n");
     print!(">createblockchain <address> \n");
-    print!(">send <from> <to> <amount> -m \n");
+    print!(">send <from> <to> <amount> <chain>-m \n");
     print!(">startnode <port>\n");
     print!(">startminer <port> <address>\n");
     print!(">getbalance <address>\n");
