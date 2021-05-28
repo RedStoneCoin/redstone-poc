@@ -18,13 +18,16 @@ use env_logger::Env;
 
 fn main() {
     print!("Redstone Node v0.1\n");
-    print!("Commands:\n");
+    println!("Commands:\n");
     print!(">createwallet\n");
     print!(">createblockchain <address> \n");
-    print!(">send <from> <to> <amount> <chain>-m \n");
+    print!(">send <from> <to> <amount> <chain> -m \n");
     print!(">startnode <port>\n");
     print!(">startminer <port> <address>\n");
-    print!(">getbalance <address>\n");
+    print!(">listaddresses\n");
+    print!(">reindex\n");
+
+
 
     env_logger::from_env(Env::default().default_filter_or("warning")).init();
 

@@ -68,8 +68,9 @@ impl Cli {
         } else if let Some(_) = matches.subcommand_matches("createwallet") {
             println!("address: {}", cmd_create_wallet()?);
         } else if let Some(_) = matches.subcommand_matches("printchain") {
+            println!("Chain 1:");
             cmd_print_chain()?;
-            println!("Chain 2");
+            println!("Chain 2:");
             cmd_print_chain2()?;
         } else if let Some(_) = matches.subcommand_matches("reindex") {
             let count = cmd_reindex()?;
@@ -163,19 +164,28 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
 
     if mine_now {
         if (chain == 2){
-            println!("Chain 2 not avable yet");
-            println!("TX failed!");
+            println!("Sending to chain 2");
+            let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
+            let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx1])?;
+            utxo_set1.update(&new_block)?;
+            println!("success!");
         }
         if (chain == 1) {
-        let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
-        let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
-        utxo_set.update(&new_block)?;
-        println!("success!");
+            println!("Sending to chain 1");
+            let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
+            let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
+            utxo_set.update(&new_block)?;
+            println!("success!");
         }
 
     } else {
-       
-        Server::send_transaction(&tx, utxo_set)?;
+        if (chain == 1) {
+            Server::send_transaction(&tx, utxo_set)?;
+        }
+        if (chain == 2) {
+            Server::send_transaction(&tx1, utxo_set1)?;
+
+        }
 
     }
 
@@ -277,14 +287,14 @@ mod test {
         assert_eq!(b1, 10);
         assert_eq!(b2, 0);
 
-        cmd_send(&addr1, &addr2, 5, true).unwrap();
+        cmd_send(&addr1, &addr2, 5, true, 1).unwrap();
 
         let b1 = cmd_get_balance(&addr1).unwrap();
         let b2 = cmd_get_balance(&addr2).unwrap();
         assert_eq!(b1, 15);
         assert_eq!(b2, 5);
 
-        cmd_send(&addr2, &addr1, 15, true).unwrap_err();
+        cmd_send(&addr2, &addr1, 15, true, 1).unwrap_err();
         let b1 = cmd_get_balance(&addr1).unwrap();
         let b2 = cmd_get_balance(&addr2).unwrap();
         assert_eq!(b1, 15);
