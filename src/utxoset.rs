@@ -24,7 +24,25 @@ impl UTXOSet {
         let mut accumulated = 0;
 
         let db = sled::open("data/utxos")?;
+        let db1 = sled::open("data2/utxos")?;
         for kv in db.iter() {
+            let (k, v) = kv?;
+            let txid = String::from_utf8(k.to_vec())?;
+            let outs: TXOutputs = deserialize(&v.to_vec())?;
+
+            for out_idx in 0..outs.outputs.len() {
+                if outs.outputs[out_idx].is_locked_with_key(pub_key_hash) && accumulated < amount {
+                    accumulated += outs.outputs[out_idx].value;
+                    match unspent_outputs.get_mut(&txid) {
+                        Some(v) => v.push(out_idx as i32),
+                        None => {
+                            unspent_outputs.insert(txid.clone(), vec![out_idx as i32]);
+                        }
+                    }
+                }
+            }
+        }
+        for kv in db1.iter() {
             let (k, v) = kv?;
             let txid = String::from_utf8(k.to_vec())?;
             let outs: TXOutputs = deserialize(&v.to_vec())?;
@@ -80,13 +98,20 @@ impl UTXOSet {
     /// Reindex rebuilds the UTXO set
     pub fn reindex(&self) -> Result<()> {
         std::fs::remove_dir_all("data/utxos").ok();
+        std::fs::remove_dir_all("data2/utxos").ok();
         let db = sled::open("data/utxos")?;
+        let db1 = sled::open("data2/utxos")?;
 
         let utxos = self.blockchain.find_UTXO();
+        let utxos1 = self.blockchain.find_UTXO();
 
         for (txid, outs) in utxos {
             db.insert(txid.as_bytes(), serialize(&outs)?)?;
         }
+        for (txid, outs) in utxos1 {
+            db1.insert(txid.as_bytes(), serialize(&outs)?)?;
+        }
+
 
         Ok(())
     }
@@ -96,6 +121,7 @@ impl UTXOSet {
     /// The Block is considered to be the tip of a blockchain
     pub fn update(&self, block: &Block) -> Result<()> {
         let db = sled::open("data/utxos")?;
+        let db1 = sled::open("data2/utxos")?;
 
         for tx in block.get_transaction() {
             if !tx.is_coinbase() {
@@ -126,6 +152,36 @@ impl UTXOSet {
             }
 
             db.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
+        }
+        for tx in block.get_transaction() {
+            if !tx.is_coinbase() {
+                for vin in &tx.vin {
+                    let mut update_outputs = TXOutputs {
+                        outputs: Vec::new(),
+                    };
+                    let outs: TXOutputs = deserialize(&db1.get(&vin.txid)?.unwrap().to_vec())?;
+                    for out_idx in 0..outs.outputs.len() {
+                        if out_idx != vin.vout as usize {
+                            update_outputs.outputs.push(outs.outputs[out_idx].clone());
+                        }
+                    }
+
+                    if update_outputs.outputs.is_empty() {
+                        db1.remove(&vin.txid)?;
+                    } else {
+                        db1.insert(vin.txid.as_bytes(), serialize(&update_outputs)?)?;
+                    }
+                }
+            }
+
+            let mut new_outputs = TXOutputs {
+                outputs: Vec::new(),
+            };
+            for out in &tx.vout {
+                new_outputs.outputs.push(out.clone());
+            }
+
+            db1.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
         }
         Ok(())
     }

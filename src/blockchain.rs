@@ -97,7 +97,6 @@ impl Blockchain {
     /// MineBlock mines a new block with the provided transactions
     pub fn mine_block(&mut self, transactions: Vec<Transaction>) -> Result<Block> {
         info!("mine a new block");
-
         for tx in &transactions {
             if !self.verify_transacton(tx)? {
                 return Err(format_err!("ERROR: Invalid transaction"));
@@ -118,6 +117,7 @@ impl Blockchain {
         self.tip = newblock.get_hash();
         Ok(newblock)
     }
+
 
 
     /// Iterator returns a BlockchainIterat
