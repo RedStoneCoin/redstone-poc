@@ -85,9 +85,26 @@ impl UTXOSet {
     }
 
     /// CountTransactions returns the number of transactions in the UTXO set
-    pub fn count_transactions(&self) -> Result<i32> {
+    pub fn count_transactions(&self, chain: i32) -> Result<i32> {
         let mut counter = 0;
-        let db = sled::open("data/utxos")?;
+        let wchain = "";
+
+        match chain {
+            1 => {
+            // handle chain 1
+            wchain == "data/utxos";
+            }
+            2 => {
+            // handle chain 1
+            wchain == "data2/utxos";
+
+            }
+            
+            _ => {
+               println!("Unknown chain index: {}", chain);
+            }
+        };
+        let db = sled::open(wchain)?;
         for kv in db.iter() {
             kv?;
             counter += 1;

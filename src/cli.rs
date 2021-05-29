@@ -27,7 +27,12 @@ impl Cli {
             .subcommand(App::new("printchain").about("print all the chain blocks"))
             .subcommand(App::new("createwallet").about("create a wallet"))
             .subcommand(App::new("listaddresses").about("list all addresses"))
-            .subcommand(App::new("reindex").about("reindex UTXO"))
+            .subcommand(App::new("reindex").about("reindex UTXO")
+                        
+        
+        
+        
+        )
             .subcommand(
                 App::new("startnode")
                     .about("start the node server")
@@ -231,14 +236,14 @@ fn cmd_reindex() -> Result<i32> {
     let utxo_set = UTXOSet { blockchain: bc };
 
     utxo_set.reindex()?;
-    utxo_set.count_transactions()
+    utxo_set.count_transactions(1)
 }
 fn cmd_reindex1() -> Result<i32> {
     let bc = Blockchain::new2()?;
     let utxo_set = UTXOSet { blockchain: bc };
 
     utxo_set.reindex()?;
-    utxo_set.count_transactions()
+    utxo_set.count_transactions(2)
 }
 fn cmd_create_blockchain(address: &str) -> Result<()> {
     let address = String::from(address);
