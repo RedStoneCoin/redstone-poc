@@ -118,11 +118,17 @@ impl Cli {
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startnode") {
             if let Some(port) = matches.value_of("port") {
-                println!("Start node...");
+                println!("Starting node!");
                 let bc = Blockchain::new()?;
                 let utxo_set = UTXOSet { blockchain: bc };
+                let bc1 = Blockchain::new2()?;
+                let utxo_set1 = UTXOSet { blockchain: bc1 };
                 let server = Server::new(port, "", utxo_set)?;
+                let server1 = Server::new(port, "", utxo_set1)?;
+                println!("Starting node theards!");
                 server.start_server()?;
+                server1.start_server()?;
+                
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let address = if let Some(address) = matches.value_of("address") {
@@ -158,7 +164,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     let bc = Blockchain::new()?;
     let bc1 = Blockchain::new2()?;
     let mut utxo_set = UTXOSet { blockchain: bc };
-    let utxo_set1 = UTXOSet { blockchain: bc1 };
+    let mut utxo_set1 = UTXOSet { blockchain: bc1 };
 
     let wallets = Wallets::new()?;
     let wallet = wallets.get_wallet(from).unwrap();
@@ -168,11 +174,11 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     if mine_now {
         match chain {
             2 => {
-            // handle chain 1
+            // handle chain 2
             println!("Sending to chain 2");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
-            let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx1])?;
-            utxo_set1.update(&new_block)?;
+            let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1])?;
+            utxo_set1.update(&new_block,2)?;
             println!("success!");
             }
             1 => {
@@ -180,7 +186,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
             println!("Sending to chain 1");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
-            utxo_set.update(&new_block)?;
+            utxo_set.update(&new_block,1)?;
             println!("success!");
             }_ => {
                println!("Unknown chain index: {}", chain);
@@ -270,11 +276,6 @@ fn cmd_print_chain() -> Result<()> {
     info!("chain 1");
     let bc = Blockchain::new()?;
     for b in bc.iter() {
-        println!("{:#?}", b);
-    }
-    info!("chain 2");
-    let bc1 = Blockchain::new2()?;
-    for b in bc1.iter() {
         println!("{:#?}", b);
     }
     Ok(())

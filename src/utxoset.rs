@@ -119,10 +119,26 @@ impl UTXOSet {
     /// Update updates the UTXO set with transactions from the Block
     ///
     /// The Block is considered to be the tip of a blockchain
-    pub fn update(&self, block: &Block) -> Result<()> {
-        let db = sled::open("data/utxos")?;
-        let db1 = sled::open("data2/utxos")?;
+    pub fn update(&self, block: &Block, chain: i32) -> Result<()> {
+        let wchain = "";
 
+        match chain {
+            1 => {
+            // handle chain 1
+            wchain == "data/utxos";
+            }
+            2 => {
+            // handle chain 1
+            wchain == "data2/utxos";
+
+            }
+            
+            _ => {
+               println!("Unknown chain index: {}", chain);
+            }
+        };
+        let db = sled::open(wchain)?;
+    
         for tx in block.get_transaction() {
             if !tx.is_coinbase() {
                 for vin in &tx.vin {
@@ -153,13 +169,19 @@ impl UTXOSet {
 
             db.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
         }
+        Ok(())
+    }
+    pub fn update1(&self, block: &Block) -> Result<()> {
+        let db = sled::open("data2/utxos")?;
+
+
         for tx in block.get_transaction() {
             if !tx.is_coinbase() {
                 for vin in &tx.vin {
                     let mut update_outputs = TXOutputs {
                         outputs: Vec::new(),
                     };
-                    let outs: TXOutputs = deserialize(&db1.get(&vin.txid)?.unwrap().to_vec())?;
+                    let outs: TXOutputs = deserialize(&db.get(&vin.txid)?.unwrap().to_vec())?;
                     for out_idx in 0..outs.outputs.len() {
                         if out_idx != vin.vout as usize {
                             update_outputs.outputs.push(outs.outputs[out_idx].clone());
@@ -167,9 +189,9 @@ impl UTXOSet {
                     }
 
                     if update_outputs.outputs.is_empty() {
-                        db1.remove(&vin.txid)?;
+                        db.remove(&vin.txid)?;
                     } else {
-                        db1.insert(vin.txid.as_bytes(), serialize(&update_outputs)?)?;
+                        db.insert(vin.txid.as_bytes(), serialize(&update_outputs)?)?;
                     }
                 }
             }
@@ -181,7 +203,7 @@ impl UTXOSet {
                 new_outputs.outputs.push(out.clone());
             }
 
-            db1.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
+            db.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
         }
         Ok(())
     }
