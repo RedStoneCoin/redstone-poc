@@ -75,6 +75,9 @@ impl Cli {
         } else if let Some(_) = matches.subcommand_matches("reindex") {
             let count = cmd_reindex()?;
             println!("Done! There are {} transactions in the UTXO set.", count);
+            println!("Chain 2:");
+            let count1 = cmd_reindex1()?;
+            println!("Done! There are {} transactions in the UTXO set.", count1);
         } else if let Some(_) = matches.subcommand_matches("listaddresses") {
             cmd_list_address()?;
         } else if let Some(ref matches) = matches.subcommand_matches("createblockchain") {
@@ -163,29 +166,45 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
 
     if mine_now {
-        if chain == 2{
+        match chain {
+            2 => {
+            // handle chain 1
             println!("Sending to chain 2");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx1])?;
             utxo_set1.update(&new_block)?;
             println!("success!");
-        }
-        if chain == 1 {
+            }
+            1 => {
+            // handle chain 1
             println!("Sending to chain 1");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
             utxo_set.update(&new_block)?;
             println!("success!");
-        }
+            }_ => {
+               println!("Unknown chain index: {}", chain);
+            }
+          };
+    
 
     } else {
-        if chain == 1 {
+        match chain {
+            1 => {
+            // handle chain 1
             Server::send_transaction(&tx, utxo_set)?;
-        }
-        if chain == 2 {
+            }
+            2 => {
+            // handle chain 1
             Server::send_transaction(&tx1, utxo_set1)?;
 
-        }
+            }
+            
+            _ => {
+               println!("Unknown chain index: {}", chain);
+            }
+          };
+
 
     }
 
@@ -204,10 +223,17 @@ fn cmd_create_wallet() -> Result<String> {
 fn cmd_reindex() -> Result<i32> {
     let bc = Blockchain::new()?;
     let utxo_set = UTXOSet { blockchain: bc };
+
     utxo_set.reindex()?;
     utxo_set.count_transactions()
 }
+fn cmd_reindex1() -> Result<i32> {
+    let bc = Blockchain::new2()?;
+    let utxo_set = UTXOSet { blockchain: bc };
 
+    utxo_set.reindex()?;
+    utxo_set.count_transactions()
+}
 fn cmd_create_blockchain(address: &str) -> Result<()> {
     let address = String::from(address);
     let bc = Blockchain::create_blockchain(address)?;
