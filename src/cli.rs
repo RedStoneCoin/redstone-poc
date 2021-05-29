@@ -155,7 +155,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     let bc = Blockchain::new()?;
     let bc1 = Blockchain::new2()?;
     let mut utxo_set = UTXOSet { blockchain: bc };
-    let mut utxo_set1 = UTXOSet { blockchain: bc1 };
+    let utxo_set1 = UTXOSet { blockchain: bc1 };
 
     let wallets = Wallets::new()?;
     let wallet = wallets.get_wallet(from).unwrap();
@@ -163,14 +163,14 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
     let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
 
     if mine_now {
-        if (chain == 2){
+        if chain == 2{
             println!("Sending to chain 2");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx1])?;
             utxo_set1.update(&new_block)?;
             println!("success!");
         }
-        if (chain == 1) {
+        if chain == 1 {
             println!("Sending to chain 1");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
@@ -179,10 +179,10 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
         }
 
     } else {
-        if (chain == 1) {
+        if chain == 1 {
             Server::send_transaction(&tx, utxo_set)?;
         }
-        if (chain == 2) {
+        if chain == 2 {
             Server::send_transaction(&tx1, utxo_set1)?;
 
         }
