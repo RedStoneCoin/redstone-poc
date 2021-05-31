@@ -64,29 +64,7 @@ impl UTXOSet {
     }
 
     /// FindUTXO finds UTXO for a public key hash
-    pub fn find_UTXO(&self, pub_key_hash: &[u8]) -> Result<TXOutputs> {
-        let mut utxos = TXOutputs {
-            outputs: Vec::new(),
-        };
-        let db = sled::open("data/utxos")?;
-
-        for kv in db.iter() {
-            let (_, v) = kv?;
-            let outs: TXOutputs = deserialize(&v.to_vec())?;
-
-            for out in outs.outputs {
-                if out.is_locked_with_key(pub_key_hash) {
-                    utxos.outputs.push(out.clone())
-                }
-            }
-        }
-
-        Ok(utxos)
-    }
-
-    /// CountTransactions returns the number of transactions in the UTXO set
-    pub fn count_transactions(&self, chain: i32) -> Result<i32> {
-        let mut counter = 0;
+    pub fn find_UTXO(&self, pub_key_hash: &[u8], chain: i32) -> Result<TXOutputs> {
         let wchain = "";
 
         match chain {
@@ -104,6 +82,43 @@ impl UTXOSet {
                println!("Unknown chain index: {}", chain);
             }
         };
+        let mut utxos = TXOutputs {
+            outputs: Vec::new(),
+        };
+        let db = sled::open(wchain)?;
+
+        for kv in db.iter() {
+            let (_, v) = kv?;
+            let outs: TXOutputs = deserialize(&v.to_vec())?;
+
+            for out in outs.outputs {
+                if out.is_locked_with_key(pub_key_hash) {
+                    utxos.outputs.push(out.clone())
+                }
+            }
+        }
+
+        Ok(utxos)
+    }
+
+    /// CountTransactions returns the number of transactions in the UTXO set
+    pub fn count_transactions(&self) -> Result<i32> {
+        let mut counter = 0;
+        let wchain = "data/utxos";
+
+
+        let db = sled::open(wchain)?;
+        for kv in db.iter() {
+            kv?;
+            counter += 1;
+        }
+        Ok(counter)
+    }
+    pub fn count_transactions1(&self) -> Result<i32> {
+        let mut counter = 0;
+        let wchain = "data2/utxos";
+
+
         let db = sled::open(wchain)?;
         for kv in db.iter() {
             kv?;
@@ -188,40 +203,5 @@ impl UTXOSet {
         }
         Ok(())
     }
-    pub fn update1(&self, block: &Block) -> Result<()> {
-        let db = sled::open("data2/utxos")?;
 
-
-        for tx in block.get_transaction() {
-            if !tx.is_coinbase() {
-                for vin in &tx.vin {
-                    let mut update_outputs = TXOutputs {
-                        outputs: Vec::new(),
-                    };
-                    let outs: TXOutputs = deserialize(&db.get(&vin.txid)?.unwrap().to_vec())?;
-                    for out_idx in 0..outs.outputs.len() {
-                        if out_idx != vin.vout as usize {
-                            update_outputs.outputs.push(outs.outputs[out_idx].clone());
-                        }
-                    }
-
-                    if update_outputs.outputs.is_empty() {
-                        db.remove(&vin.txid)?;
-                    } else {
-                        db.insert(vin.txid.as_bytes(), serialize(&update_outputs)?)?;
-                    }
-                }
-            }
-
-            let mut new_outputs = TXOutputs {
-                outputs: Vec::new(),
-            };
-            for out in &tx.vout {
-                new_outputs.outputs.push(out.clone());
-            }
-
-            db.insert(tx.id.as_bytes(), serialize(&new_outputs)?)?;
-        }
-        Ok(())
-    }
 }

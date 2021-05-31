@@ -100,7 +100,7 @@ impl Block {
 
     fn prepare_hash_data(&self) -> Result<Vec<u8>> {
         let content = (
-            
+            self.Header.clone(),
             self.prev_block_hash.clone(),
             self.hash_transactions()?,
             self.timestamp,

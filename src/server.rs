@@ -102,7 +102,7 @@ impl Server {
             mining_address: self.mining_address.clone(),
             inner: Arc::clone(&self.inner),
         };
-        info!(
+        println!(
             "Start server at {}, minning address: {}",
             &self.node_address, &self.mining_address
         );
@@ -117,7 +117,7 @@ impl Server {
         });
 
         let listener = TcpListener::bind(&self.node_address).unwrap();
-        info!("Server listen...");
+        println!("Server listen...");
 
         for stream in listener.incoming() {
             let stream = stream?;

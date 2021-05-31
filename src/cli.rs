@@ -27,7 +27,9 @@ impl Cli {
             .subcommand(App::new("printchain").about("print all the chain blocks"))
             .subcommand(App::new("createwallet").about("create a wallet"))
             .subcommand(App::new("listaddresses").about("list all addresses"))
-            .subcommand(App::new("reindex").about("reindex UTXO")
+            .subcommand(
+                         App::new("reindex")
+                        .about("reindex UTXO")
                         
         
         
@@ -68,7 +70,8 @@ impl Cli {
         if let Some(ref matches) = matches.subcommand_matches("getbalance") {
             if let Some(address) = matches.value_of("address") {
                 let balance = cmd_get_balance(address)?;
-                println!("Balance: {}\n", balance);
+                let balance2 = cmd_get_balance1(address)?;
+                println!("Balance: {}\n", balance + balance2);
             }
         } else if let Some(_) = matches.subcommand_matches("createwallet") {
             println!("address: {}", cmd_create_wallet()?);
@@ -132,6 +135,7 @@ impl Cli {
                 let server1 = Server::new(port, "", utxo_set1)?;
                 println!("Starting node theards!");
                 server.start_server()?;
+                println!("Starting node theards2!");
                 server1.start_server()?;
                 
             }
@@ -232,18 +236,20 @@ fn cmd_create_wallet() -> Result<String> {
 }
 
 fn cmd_reindex() -> Result<i32> {
+    
     let bc = Blockchain::new()?;
     let utxo_set = UTXOSet { blockchain: bc };
 
     utxo_set.reindex()?;
-    utxo_set.count_transactions(1)
+    utxo_set.count_transactions()
 }
 fn cmd_reindex1() -> Result<i32> {
-    let bc = Blockchain::new2()?;
-    let utxo_set = UTXOSet { blockchain: bc };
+    let bc1 = Blockchain::new2()?;
+    let utxo_set = UTXOSet { blockchain: bc1 };
+
 
     utxo_set.reindex()?;
-    utxo_set.count_transactions(2)
+    utxo_set.count_transactions1()
 }
 fn cmd_create_blockchain(address: &str) -> Result<()> {
     let address = String::from(address);
@@ -268,7 +274,7 @@ fn cmd_get_balance(address: &str) -> Result<i32> {
     let pub_key_hash = Address::decode(address).unwrap().body;
     let bc = Blockchain::new()?;
     let utxo_set = UTXOSet { blockchain: bc };
-    let utxos = utxo_set.find_UTXO(&pub_key_hash)?;
+    let utxos = utxo_set.find_UTXO(&pub_key_hash,1)?;
 
     let mut balance = 0;
     for out in utxos.outputs {
@@ -276,7 +282,18 @@ fn cmd_get_balance(address: &str) -> Result<i32> {
     }
     Ok(balance)
 }
+fn cmd_get_balance1(address: &str) -> Result<i32> {
+    let pub_key_hash = Address::decode(address).unwrap().body;
+    let bc = Blockchain::new2()?;
+    let utxo_set = UTXOSet { blockchain: bc };
+    let utxos = utxo_set.find_UTXO(&pub_key_hash,2)?;
 
+    let mut balance = 0;
+    for out in utxos.outputs {
+        balance += out.value;
+    }
+    Ok(balance)
+}
 fn cmd_print_chain() -> Result<()> {
     info!("chain 1");
     let bc = Blockchain::new()?;
