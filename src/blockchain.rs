@@ -78,7 +78,7 @@ impl Blockchain {
     /// CreateBlockchain creates a new blockchain DB
     pub fn create_blockchain(address: String) -> Result<Blockchain> {
         info!("Creating new blockchain");
-
+         
         std::fs::remove_dir_all("data/blocks").ok();
         let db = sled::open("data/blocks")?;
         debug!("Creating new block database");
@@ -104,10 +104,12 @@ impl Blockchain {
         }
 
         let lasthash = self.db.get("LAST")?.unwrap();
+        let lasthash1 = self.db.get("LAST")?.unwrap();
 
         let newblock = Block::new_block(
             transactions,
             String::from_utf8(lasthash.to_vec())?,
+            String::from_utf8(lasthash1.to_vec())?,
             self.get_best_height()? + 1,
         )?;
         self.db.insert(newblock.get_hash(), serialize(&newblock)?)?;

@@ -1,5 +1,6 @@
 # Redstone codebase
 ## Implementation of Redstone protocol
+This is the offical implemention of the redstone protocol. It is written in rust. Protocol is subject to frequent change and as such no documention exists (however it is in the works) It is currently not ready for usage.
 ### To do
 - [ ] Every block to include hedder egg chain 1 and prev hash from other chain if header is chain 1 look chain 3
 - [x]  Custom save 2 databses
@@ -16,5 +17,4 @@
 - [x] Simple node
 - [x] Balance = chain 1 addr balance + chain 2 addr balance
 - [x] Block to include header and other hash (just added to block struct)
-- [] ADVANCE: Implement everything in one function this will hapen at end insted of usinf eg mine_block_chain2() use mine_block(arg: chain) this will hapen at end as now we are testing features and implementing it for testing.c
-### struckture
+- [ ] ADVANCE: Implement everything in one function this will hapen at end insted of usinf eg mine_block_chain2() use mine_block(arg: chain) this will hapen at end as now we are testing features and implementing it for testing.c

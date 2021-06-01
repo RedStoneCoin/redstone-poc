@@ -20,6 +20,7 @@ pub struct Block {
     timestamp: u128,
     transactions: Vec<Transaction>,
     prev_block_hash: String,
+    prev_block_hash_other: String,
     hash: String,
     nonce: i32,
     height: i32,
@@ -31,6 +32,9 @@ impl Block {
 
     pub fn get_prev_hash(&self) -> String {
         self.prev_block_hash.clone()
+    }
+    pub fn get_prev_hash_other(&self) -> String {
+        self.prev_block_hash_other.clone()
     }
 
     pub fn get_transaction(&self) -> &Vec<Transaction> {
@@ -45,6 +49,7 @@ impl Block {
     pub fn new_block(
         transactions: Vec<Transaction>,
         prev_block_hash: String,
+        prev_block_hash_other: String,
         height: i32,
     ) -> Result<Block> {
         let timestamp = SystemTime::now()
@@ -55,6 +60,7 @@ impl Block {
             timestamp,
             transactions,
             prev_block_hash,
+            prev_block_hash_other,
             hash: String::new(),
             nonce: 0,
             height,
@@ -66,7 +72,8 @@ impl Block {
     /// NewGenesisBlock creates and returns genesis Block
     /// Add here Header
     pub fn new_genesis_block(coinbase: Transaction) -> Block {
-        Block::new_block(vec![coinbase], String::new(), 0).unwrap()  
+        let string = "Genessis block";
+        Block::new_block(vec![coinbase], String::new(), string.to_string(), 0,).unwrap()  
     }
 
     /// Run performs a proof-of-work
@@ -102,6 +109,7 @@ impl Block {
         let content = (
             self.Header.clone(),
             self.prev_block_hash.clone(),
+            self.prev_block_hash_other.clone(),
             self.hash_transactions()?,
             self.timestamp,
             TARGET_HEXS,
