@@ -218,8 +218,8 @@ impl Server {
         self.inner.lock().unwrap().utxo.blockchain.add_block(block)
     }
 
-    fn mine_block(&self, txs: Vec<Transaction>) -> Result<Block> {
-        self.inner.lock().unwrap().utxo.blockchain.mine_block(txs)
+    fn mine_block(&self, txs: Vec<Transaction,>,chain: i32) -> Result<Block> {
+        self.inner.lock().unwrap().utxo.blockchain.mine_block(txs, chain)
     }
 
     fn utxo_reindex(&self) -> Result<()> {
@@ -457,7 +457,7 @@ impl Server {
                         mempool.remove(&tx.id);
                     }
 
-                    let new_block = self.mine_block(txs)?;
+                    let new_block = self.mine_block(txs,1)?;
                     self.utxo_reindex()?;
 
                     for node in self.get_known_nodes() {

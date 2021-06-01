@@ -184,7 +184,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
 
             println!("Sending to chain 2");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
-            let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1])?;
+            let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1],2)?;
             utxo_set1.update(&new_block,2)?;
             println!("success!");
             }
@@ -197,7 +197,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
 
             println!("Sending to chain 1");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
-            let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx])?;
+            let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx,],1)?;
             utxo_set.update(&new_block,1)?;
             println!("success!");
             }_ => {
@@ -352,7 +352,7 @@ mod test {
         assert_eq!(b1, 15);
         assert_eq!(b2, 5);
 
-        cmd_send(&addr2, &addr1, 15, true, 1).unwrap_err();
+        cmd_send(&addr2, &addr1, 15, true, 2).unwrap_err();
         let b1 = cmd_get_balance(&addr1).unwrap();
         let b2 = cmd_get_balance(&addr2).unwrap();
         assert_eq!(b1, 15);

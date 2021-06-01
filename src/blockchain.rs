@@ -95,16 +95,21 @@ impl Blockchain {
     }
 
     /// MineBlock mines a new block with the provided transactions
-    pub fn mine_block(&mut self, transactions: Vec<Transaction>) -> Result<Block> {
+    pub fn mine_block(&mut self, transactions: Vec<Transaction>, chain: i32) -> Result<Block> {
         info!("mine a new block");
         for tx in &transactions {
             if !self.verify_transacton(tx)? {
                 return Err(format_err!("ERROR: Invalid transaction"));
             }
         }
-
+        let wchain = match chain {
+            1 => "data2/blocks",
+            2 => "data/blocks",
+            _ => panic!("Unknown chain index!")
+        };
+        let db1 = sled::open(wchain)?;
         let lasthash = self.db.get("LAST")?.unwrap();
-        let lasthash1 = self.db.get("LAST")?.unwrap();
+        let lasthash1 = db1.get("LAST")?.unwrap();
 
         let newblock = Block::new_block(
             transactions,
