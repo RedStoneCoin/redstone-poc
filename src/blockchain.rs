@@ -65,7 +65,7 @@ impl Blockchain {
         let db = sled::open("data2/blocks")?;
         debug!("Creating new block database");
         let cbtx = Transaction::new_coinbase(address, String::from(GENESIS_COINBASE_DATA))?;
-        let genesis: Block = Block::new_genesis_block(cbtx);
+        let genesis: Block = Block::new_genesis_block(cbtx,2);
         db.insert(genesis.get_hash(), serialize(&genesis)?)?;
         db.insert("LAST", genesis.get_hash().as_bytes())?;
         let bc = Blockchain {
@@ -83,7 +83,7 @@ impl Blockchain {
         let db = sled::open("data/blocks")?;
         debug!("Creating new block database");
         let cbtx = Transaction::new_coinbase(address, String::from(GENESIS_COINBASE_DATA))?;
-        let genesis: Block = Block::new_genesis_block(cbtx);
+        let genesis: Block = Block::new_genesis_block(cbtx,1);
         db.insert(genesis.get_hash(), serialize(&genesis)?)?;
         db.insert("LAST", genesis.get_hash().as_bytes())?;
         let bc = Blockchain {
@@ -102,6 +102,12 @@ impl Blockchain {
                 return Err(format_err!("ERROR: Invalid transaction"));
             }
         }
+        let Header = match chain {
+            1 => "Chain 1",
+            2 => "Chain 2",
+            _ => panic!("Unknown chain index!")
+        };
+        let header = Header.to_string();
         let wchain = match chain {
             1 => "data2/blocks",
             2 => "data/blocks",
@@ -115,6 +121,7 @@ impl Blockchain {
             transactions,
             String::from_utf8(lasthash.to_vec())?,
             String::from_utf8(lasthash1.to_vec())?,
+            String::from(Header),
             self.get_best_height()? + 1,
         )?;
         self.db.insert(newblock.get_hash(), serialize(&newblock)?)?;

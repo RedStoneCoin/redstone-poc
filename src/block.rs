@@ -50,17 +50,19 @@ impl Block {
         transactions: Vec<Transaction>,
         prev_block_hash: String,
         prev_block_hash_other: String,
+        Header: String,
         height: i32,
     ) -> Result<Block> {
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_millis();
         let mut block = Block {
-            Header: String::from("This is header"),
+        
             timestamp,
             transactions,
             prev_block_hash,
             prev_block_hash_other,
+            Header,
             hash: String::new(),
             nonce: 0,
             height,
@@ -71,9 +73,15 @@ impl Block {
 
     /// NewGenesisBlock creates and returns genesis Block
     /// Add here Header
-    pub fn new_genesis_block(coinbase: Transaction) -> Block {
+    pub fn new_genesis_block(coinbase: Transaction, chain: i32) -> Block {
+        let Header = match chain {
+            1 => "Chain 1",
+            2 => "Chain 2",
+            _ => panic!("Unknown chain index!")
+        };
         let string = "Genessis block";
-        Block::new_block(vec![coinbase], String::new(), string.to_string(), 0,).unwrap()  
+
+        Block::new_block(vec![coinbase], String::new(), string.to_string(),Header.to_string() , 0).unwrap()  
     }
 
     /// Run performs a proof-of-work

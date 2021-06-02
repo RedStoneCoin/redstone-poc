@@ -13,10 +13,11 @@ This is the offical implemention of the redstone protocol. It is written in rust
 - [ ] In block stuct insert hedder and prev hash other
 - [ ]  Added node saving to database by header egg if header 1 save to chain 1 database.
 - [ ] 2 chain validation (if necesery)
+- [ ] block reward (if necesery)
 - [x] Simple p2p implemetation of blockchain
 - [x] Signing with wallet and sending txt to the blockchain
 - [x] Simple node
 - [x] Balance = chain 1 addr balance + chain 2 addr balance
 - [x] Block to include header and other hash (just added to block struct)
 - [x] ADVANCE: Implement everything in one function this will hapen at end insted of usinf eg mine_block_chain2() use mine_block(arg: chain) this will hapen at end as now we are testing features and implementing it for testing.
-- [] ADVANCE: Adding encrypted p2p system (this will be added at the end)
+- [ ] ADVANCE: Adding encrypted p2p system (this will be added at the end)
