@@ -65,23 +65,13 @@ impl UTXOSet {
 
     /// FindUTXO finds UTXO for a public key hash
     pub fn find_UTXO(&self, pub_key_hash: &[u8], chain: i32) -> Result<TXOutputs> {
-        let wchain = "";
-
-        match chain {
-            1 => {
-            // handle chain 1
-            wchain == "data/utxos";
-            }
-            2 => {
-            // handle chain 1
-            wchain == "data2/utxos";
-
-            }
-            
-            _ => {
-               println!("Unknown chain index: {}", chain);
-            }
+        let wchain = match chain {
+            1 => "data/utxos",
+            2 => "data2/utxos",
+            _ => panic!("Unknown chain index!")
         };
+
+  
         let mut utxos = TXOutputs {
             outputs: Vec::new(),
         };
@@ -152,23 +142,13 @@ impl UTXOSet {
     ///
     /// The Block is considered to be the tip of a blockchain
     pub fn update(&self, block: &Block, chain: i32) -> Result<()> {
-        let wchain = "";
-
-        match chain {
-            1 => {
-            // handle chain 1
-            wchain == "data/utxos";
-            }
-            2 => {
-            // handle chain 1
-            wchain == "data2/utxos";
-
-            }
-            
-            _ => {
-               println!("Unknown chain index: {}", chain);
-            }
+        let wchain = match chain {
+            1 => "data/utxos",
+            2 => "data2/utxos",
+            _ => panic!("Unknown chain index!")
         };
+
+  
         let db = sled::open(wchain)?;
     
         for tx in block.get_transaction() {

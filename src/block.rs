@@ -33,10 +33,11 @@ impl Block {
     pub fn get_prev_hash(&self) -> String {
         self.prev_block_hash.clone()
     }
+    /*
     pub fn get_prev_hash_other(&self) -> String {
         self.prev_block_hash_other.clone()
     }
-
+    */
     pub fn get_transaction(&self) -> &Vec<Transaction> {
         &self.transactions
     }

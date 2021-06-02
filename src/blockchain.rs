@@ -107,7 +107,7 @@ impl Blockchain {
             2 => "Chain 2",
             _ => panic!("Unknown chain index!")
         };
-        let header = Header.to_string();
+        
         let wchain = match chain {
             1 => "data2/blocks",
             2 => "data/blocks",
