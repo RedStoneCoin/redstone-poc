@@ -17,7 +17,7 @@ use crate::cli::Cli;
 use env_logger::Env;
 
 fn main() {
-    print!("Redstone Node v0.1\n");
+    print!("Redstone Client v0.1\n");
     println!("Commands:\n");
     print!(">createwallet\n");
     print!(">createblockchain <address> \n");
@@ -26,11 +26,7 @@ fn main() {
     print!(">startminer <port> <address>\n");
     print!(">listaddresses\n");
     print!(">reindex\n");
-
-
-
     env_logger::from_env(Env::default().default_filter_or("warning")).init();
-
     let mut cli = Cli::new();
     if let Err(e) = cli.run() {
         println!("Error: {}", e);
