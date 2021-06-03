@@ -85,7 +85,7 @@ impl Wallets {
         let wallet = Wallet::new();
         let address = wallet.get_address();
         self.wallets.insert(address.clone(), wallet);
-        info!("create wallet: {}", address);
+        println!("create wallet: {}", address);
         address
     }
 

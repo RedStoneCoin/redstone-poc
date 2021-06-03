@@ -48,7 +48,7 @@ pub struct Transaction {
 impl Transaction {
     /// NewUTXOTransaction creates a new transaction
     pub fn new_UTXO(wallet: &Wallet, to: &str, amount: i32, utxo: &UTXOSet) -> Result<Transaction> {
-        info!(
+        println!(
             "new UTXO Transaction from: {} to: {}",
             wallet.get_address(),
             to
@@ -98,7 +98,7 @@ impl Transaction {
 
     /// NewCoinbaseTX creates a new coinbase transaction
     pub fn new_coinbase(to: String, mut data: String) -> Result<Transaction> {
-        info!("new coinbase Transaction to: {}", to);
+        println!("new coinbase Transaction to: {}", to);
         let mut key: [u8; 32] = [0; 32];
         if data.is_empty() {
             let mut rand = rand::OsRng::new().unwrap();

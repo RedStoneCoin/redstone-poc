@@ -27,14 +27,14 @@ pub struct BlockchainIterator<'a> {
 impl Blockchain {
     /// NewBlockchain creates a new Blockchain db
     pub fn new() -> Result<Blockchain> {
-        info!("open blockchain");
+        println!("open blockchain");
 
         let db = sled::open("data/blocks")?;
         let hash = match db.get("LAST")? {
             Some(l) => l.to_vec(),
             None => Vec::new(),
         };
-        info!("Found block database");
+        println!("Found block database");
         let lasthash = if hash.is_empty() {
             String::new()
         } else {
@@ -43,14 +43,14 @@ impl Blockchain {
         Ok(Blockchain { tip: lasthash, db })
     }
     pub fn new2() -> Result<Blockchain> {
-        info!("open blockchain 2");
+        println!("open blockchain 2");
 
         let db = sled::open("data2/blocks")?;
         let hash = match db.get("LAST")? {
             Some(l) => l.to_vec(),
             None => Vec::new(),
         };
-        info!("Found block database");
+        println!("Found block database");
         let lasthash = if hash.is_empty() {
             String::new()
         } else {
@@ -59,7 +59,7 @@ impl Blockchain {
         Ok(Blockchain { tip: lasthash, db })
     }
     pub fn create_blockchain1(address: String) -> Result<Blockchain> {
-        info!("Creating new blockchain 1");
+        println!("Creating new blockchain 1");
 
         std::fs::remove_dir_all("data2/blocks").ok();
         let db = sled::open("data2/blocks")?;
@@ -77,7 +77,7 @@ impl Blockchain {
     }
     /// CreateBlockchain creates a new blockchain DB
     pub fn create_blockchain(address: String) -> Result<Blockchain> {
-        info!("Creating new blockchain");
+        println!("Creating new blockchain");
          
         std::fs::remove_dir_all("data/blocks").ok();
         let db = sled::open("data/blocks")?;
@@ -96,7 +96,7 @@ impl Blockchain {
 
     /// MineBlock mines a new block with the provided transactions
     pub fn mine_block(&mut self, transactions: Vec<Transaction>, chain: i32) -> Result<Block> {
-        info!("mine a new block");
+        println!("mine a new block");
         for tx in &transactions {
             if !self.verify_transacton(tx)? {
                 return Err(format_err!("ERROR: Invalid transaction"));

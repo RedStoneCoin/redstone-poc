@@ -242,7 +242,7 @@ impl Server {
 
         stream.write(data)?;
 
-        info!("data send successfully");
+        println!("data send successfully");
         Ok(())
     }
 
@@ -254,7 +254,7 @@ impl Server {
     }
 
     fn send_block(&self, addr: &str, b: &Block) -> Result<()> {
-        info!("send block data to: {} block hash: {}", addr, b.get_hash());
+        println!("send block data to: {} block hash: {}", addr, b.get_hash());
         let data = Blockmsg {
             addr_from: self.node_address.clone(),
             block: b.clone(),
@@ -264,14 +264,14 @@ impl Server {
     }
 
     fn send_addr(&self, addr: &str) -> Result<()> {
-        info!("send address info to: {}", addr);
+        println!("send address info to: {}", addr);
         let nodes = self.get_known_nodes();
         let data = serialize(&(cmd_to_bytes("addr"), nodes))?;
         self.send_data(addr, &data)
     }
 
     fn send_inv(&self, addr: &str, kind: &str, items: Vec<String>) -> Result<()> {
-        info!(
+        println!(
             "send inv message to: {} kind: {} data: {:?}",
             addr, kind, items
         );
@@ -285,7 +285,7 @@ impl Server {
     }
 
     fn send_get_blocks(&self, addr: &str) -> Result<()> {
-        info!("send get blocks message to: {}", addr);
+        println!("send get blocks message to: {}", addr);
         let data = GetBlocksmsg {
             addr_from: self.node_address.clone(),
         };
@@ -294,7 +294,7 @@ impl Server {
     }
 
     fn send_get_data(&self, addr: &str, kind: &str, id: &str) -> Result<()> {
-        info!(
+        println!(
             "send get data message to: {} kind: {} id: {}",
             addr, kind, id
         );
@@ -308,7 +308,7 @@ impl Server {
     }
 
     pub fn send_tx(&self, addr: &str, tx: &Transaction) -> Result<()> {
-        info!("send tx to: {} txid: {}", addr, &tx.id);
+        println!("send tx to: {} txid: {}", addr, &tx.id);
         let data = Txmsg {
             addr_from: self.node_address.clone(),
             transaction: tx.clone(),
@@ -318,7 +318,7 @@ impl Server {
     }
 
     fn send_version(&self, addr: &str) -> Result<()> {
-        info!("send version info to: {}", addr);
+        println!("send version info to: {}", addr);
         let data = Versionmsg {
             addr_from: self.node_address.clone(),
             best_height: self.get_best_height()?,
@@ -329,7 +329,7 @@ impl Server {
     }
 
     fn handle_version(&self, msg: Versionmsg) -> Result<()> {
-        info!("receive version msg: {:#?}", msg);
+        println!("receive version msg: {:#?}", msg);
         let my_best_height = self.get_best_height()?;
         if my_best_height < msg.best_height {
             self.send_get_blocks(&msg.addr_from)?;
@@ -346,7 +346,7 @@ impl Server {
     }
 
     fn handle_addr(&self, msg: Vec<String>) -> Result<()> {
-        info!("receive address msg: {:#?}", msg);
+        println!("receive address msg: {:#?}", msg);
         for node in msg {
             self.add_nodes(&node);
         }
@@ -355,7 +355,7 @@ impl Server {
     }
 
     fn handle_block(&self, msg: Blockmsg) -> Result<()> {
-        info!(
+        println!(
             "receive block msg: {}, {}",
             msg.addr_from,
             msg.block.get_hash()
@@ -376,7 +376,7 @@ impl Server {
     }
 
     fn handle_inv(&self, msg: Invmsg) -> Result<()> {
-        info!("receive inv msg: {:#?}", msg);
+        println!("receive inv msg: {:#?}", msg);
         if msg.kind == "block" {
             let block_hash = &msg.items[0];
             self.send_get_data(&msg.addr_from, "block", block_hash)?;
@@ -403,14 +403,14 @@ impl Server {
     }
 
     fn handle_get_blocks(&self, msg: GetBlocksmsg) -> Result<()> {
-        info!("receive get blocks msg: {:#?}", msg);
+        println!("receive get blocks msg: {:#?}", msg);
         let block_hashs = self.get_block_hashs();
         self.send_inv(&msg.addr_from, "block", block_hashs)?;
         Ok(())
     }
 
     fn handle_get_data(&self, msg: GetDatamsg) -> Result<()> {
-        info!("receive get data msg: {:#?}", msg);
+        println!("receive get data msg: {:#?}", msg);
         if msg.kind == "block" {
             let block = self.get_block(&msg.id)?;
             self.send_block(&msg.addr_from, &block)?;
@@ -422,7 +422,7 @@ impl Server {
     }
 
     fn handle_tx(&self, msg: Txmsg) -> Result<()> {
-        info!("receive tx msg: {} {}", msg.addr_from, &msg.transaction.id);
+        println!("receive tx msg: {} {}", msg.addr_from, &msg.transaction.id);
         self.insert_mempool(msg.transaction.clone());
 
         let known_nodes = self.get_known_nodes();
@@ -480,7 +480,7 @@ impl Server {
     fn handle_connection(&self, mut stream: TcpStream) -> Result<()> {
         let mut buffer = Vec::new();
         let count = stream.read_to_end(&mut buffer)?;
-        info!("Accept request: length {}", count);
+        println!("Accept request: length {}", count);
 
         let cmd = bytes_to_cmd(&buffer)?;
 
@@ -515,7 +515,7 @@ fn bytes_to_cmd(bytes: &[u8]) -> Result<Message> {
             cmd.push(*b);
         }
     }
-    info!("cmd: {}", String::from_utf8(cmd.clone())?);
+    println!("cmd: {}", String::from_utf8(cmd.clone())?);
 
     if cmd == "addr".as_bytes() {
         let data: Vec<String> = deserialize(data)?;

@@ -18,7 +18,7 @@ impl Cli {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        info!("run app");
+        println!("run app");
         let matches = App::new("Redstone cb")
             .version("0.1")
             .author("Redstone Developers")
@@ -304,7 +304,7 @@ fn cmd_get_balance1(address: &str) -> Result<i32> {
     Ok(balance)
 }
 fn cmd_print_chain() -> Result<()> {
-    info!("chain 1");
+    println!("chain 1");
     let bc = Blockchain::new()?;
     for b in bc.iter() {
         println!("{:#?}", b);
@@ -313,7 +313,7 @@ fn cmd_print_chain() -> Result<()> {
 }
 fn cmd_print_chain2() -> Result<()> {
 
-    info!("chain 2");
+    println!("chain 2");
     let bc1 = Blockchain::new2()?;
     for b in bc1.iter() {
         println!("{:#?}", b);

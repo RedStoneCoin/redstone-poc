@@ -87,7 +87,7 @@ impl Block {
 
     /// Run performs a proof-of-work
     fn run_proof_of_work(&mut self) -> Result<()> {
-        info!("Mining the block");
+        println!("Mining the block");
         while !self.validate()? {
             self.nonce += 1;
         }
