@@ -5,14 +5,13 @@ This is the offical implemention of the redstone protocol. It is written in rust
 - [x] Every block to include hedder egg chain 1 and prev hash from other chain if header is chain 1 look chain 2
 - [x]  Custom save 2 databses
 - [x]  Header Input
-- [ ]  Start node server on both chains
+- [x]  Start node server on both chains
 - [ ]  Syncing network by node
-- [ ]  1 thread 1 node eg software will run multiply nodes in one program via rust threads 
 - [ ]  Only synces nodes can make blocks, so if someone does not sync it cant send newest block that prev hash is behiend network
 - [x]  Mine func for 1st and 2nd chain
 - [x]  Wallet look both databases
 - [x]  When making new block node will in header put on what blockchain is going on prev hash from that blockchain + prev hash from other chain egg 2nd.
-- [ ]  When validating chains open newest db from both chains and validate
+- [x]  When validating chains open newest db from both chains and validate
 - [x] In block stuct insert hedder and prev hash other
 - [x]  Added node saving to database by header egg if header 1 save to chain 1 database.
 - [ ] 2 chain validation (if necesery)
