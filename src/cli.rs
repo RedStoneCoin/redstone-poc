@@ -9,7 +9,6 @@ use crate::wallets::*;
 use bitcoincash_addr::Address;
 use clap::{App, Arg};
 use std::process::exit;
-use std::thread;
 
 pub struct Cli {}
 
@@ -151,17 +150,17 @@ impl Cli {
                 
 
     
-                let wchain = match chain {
+                match chain {
                     1 =>  {
                         println!("Starting node on {}", chain);
 
-                        server.start_server();
+                        server.start_server()?;
 
                     },
                     2 => { 
                         println!("Starting node on {}", chain);
 
-                        server1.start_server();
+                        server1.start_server()?;
                     }   ,
                     _ => panic!("Unknown chain index!")
                 };
@@ -195,17 +194,17 @@ impl Cli {
             let utxo_set1 = UTXOSet { blockchain: bc1 };
             let server1 = Server::new(port, address, utxo_set1)?;
            
-            let wchain = match chain {
+            match chain {
                 1 =>  {
                     println!("Starting node on {}", chain);
 
-                    server.start_server();
+                    server.start_server()?;
 
                 },
                 2 => { 
                     println!("Starting node on {}", chain);
 
-                    server1.start_server();
+                    server1.start_server()?;
                 }   ,
                 _ => panic!("Unknown chain index!")
             };
