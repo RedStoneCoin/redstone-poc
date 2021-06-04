@@ -115,7 +115,7 @@ impl Server {
                 server1.send_version(KNOWN_NODE1)
             }
         });
-
+        // end
         let listener = TcpListener::bind(&self.node_address).unwrap();
         println!("Server listen...");
 

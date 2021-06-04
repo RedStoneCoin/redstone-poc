@@ -4,7 +4,7 @@ This is the offical implemention of the redstone protocol. It is written in rust
 ### To do
 - [x] Every block to include hedder egg chain 1 and prev hash from other chain if header is chain 1 look chain 2
 - [x]  Custom save 2 databses
-- [ ]  Last header check
+- [x]  Header Input
 - [ ]  Start node server on both chains
 - [ ]  Syncing network by node
 - [ ]  1 thread 1 node eg software will run multiply nodes in one program via rust threads 

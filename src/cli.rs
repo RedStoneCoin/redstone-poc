@@ -9,6 +9,7 @@ use crate::wallets::*;
 use bitcoincash_addr::Address;
 use clap::{App, Arg};
 use std::process::exit;
+use std::thread;
 
 pub struct Cli {}
 
@@ -38,13 +39,18 @@ impl Cli {
             .subcommand(
                 App::new("startnode")
                     .about("start the node server")
-                    .arg(Arg::from_usage("<port> 'the port server bind to locally'")),
-            )
+                    .arg(Arg::from_usage("<port> 'the port server bind to locally'"))
+                    .arg(Arg::from_usage("<chain> 'Chain'")),
+        
+                            
+                )
             .subcommand(
                 App::new("startminer")
                     .about("start the minner server")
                     .arg(Arg::from_usage("<port> 'the port server bind to locally'"))
-                    .arg(Arg::from_usage("<address> 'wallet address'")),
+                    .arg(Arg::from_usage("<address> 'wallet address'"))
+                    .arg(Arg::from_usage("<chain> 'Chain'")),
+                    
             )
             .subcommand(
                 App::new("getbalance")
@@ -125,18 +131,41 @@ impl Cli {
                 cmd_send(from, to, amount, false, chain)?;
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startnode") {
+            let chain: i32 = if let Some(chain) = matches.value_of("chain") {
+                chain.parse()?
+            } else {
+                println!("Chain is bad!: usage\n{}", matches.usage());
+                exit(1)
+            };
             if let Some(port) = matches.value_of("port") {
+
                 println!("Starting node!");
                 let bc = Blockchain::new()?;
                 let utxo_set = UTXOSet { blockchain: bc };
                 let bc1 = Blockchain::new2()?;
                 let utxo_set1 = UTXOSet { blockchain: bc1 };
-                let server = Server::new(port, "", utxo_set)?;
+                let server = Server::new(port, "", utxo_set,)?;
                 let server1 = Server::new(port, "", utxo_set1)?;
-                println!("Starting node theards!");
-                server.start_server()?;
-                println!("Starting node theards2!");
-                server1.start_server()?;
+                println!("Starting node!");
+                
+                
+
+    
+                let wchain = match chain {
+                    1 =>  {
+                        println!("Starting node on {}", chain);
+
+                        server.start_server();
+
+                    },
+                    2 => { 
+                        println!("Starting node on {}", chain);
+
+                        server1.start_server();
+                    }   ,
+                    _ => panic!("Unknown chain index!")
+                };
+                println!("END");
                 
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startminer") {
