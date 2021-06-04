@@ -169,6 +169,12 @@ impl Cli {
                 
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startminer") {
+            let chain: i32 = if let Some(chain) = matches.value_of("chain") {
+                chain.parse()?
+            } else {
+                println!("Chain is bad!: usage\n{}", matches.usage());
+                exit(1)
+            };
             let address = if let Some(address) = matches.value_of("address") {
                 address
             } else {
@@ -185,12 +191,28 @@ impl Cli {
             let bc = Blockchain::new()?;
             let utxo_set = UTXOSet { blockchain: bc };
             let server = Server::new(port, address, utxo_set)?;
-            server.start_server()?;
             let bc1 = Blockchain::new2()?;
             let utxo_set1 = UTXOSet { blockchain: bc1 };
             let server1 = Server::new(port, address, utxo_set1)?;
-            server1.start_server()?;
-            //this should start node on both server if not we will start in in a thread
+           
+            let wchain = match chain {
+                1 =>  {
+                    println!("Starting node on {}", chain);
+
+                    server.start_server();
+
+                },
+                2 => { 
+                    println!("Starting node on {}", chain);
+
+                    server1.start_server();
+                }   ,
+                _ => panic!("Unknown chain index!")
+            };
+           
+
+            
+        
 
         }
 
