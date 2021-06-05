@@ -83,6 +83,7 @@ struct ServerInner {
     utxo: UTXOSet,
     blocks_in_transit: Vec<String>,
     mempool: HashMap<String, Transaction>,
+    utxo1: UTXOSet,
 }
 
 const KNOWN_NODE1: &str = "localhost:3000";
@@ -90,24 +91,14 @@ const CMD_LEN: usize = 12;
 const VERSION: i32 = 1;
 
 impl Server {
-    pub fn new(port: &str, miner_address: &str, chain: i32) -> Result<Server> {
+    pub fn new(port: &str, miner_address: &str) -> Result<Server> {
 
-
-        let utxo = match chain {
-            1 => {
-                let bc = Blockchain::new()?;
-                let utxo_set = UTXOSet { blockchain: bc };
-                utxo_set
-            },
-            2 =>{ 
-                let bc1 = Blockchain::new2()?;
-                let utxo_set1 = UTXOSet { blockchain: bc1 };                
-                utxo_set1
-            
-            },
-            _ => panic!("Unknown chain index!")
-        };
-
+        let bc = Blockchain::new()?;
+        let utxo_set = UTXOSet { blockchain: bc };
+        let bc1 = Blockchain::new2()?;
+        let utxo_set1 = UTXOSet { blockchain: bc1 };    
+        let utxo = utxo_set;
+        let utxo1 = utxo_set1;
 
         let mut node_set = HashSet::new();
 
@@ -121,6 +112,7 @@ impl Server {
                 utxo,
                 blocks_in_transit: Vec::new(),
                 mempool: HashMap::new(),
+                utxo1,
             })),
         })
     }
@@ -162,7 +154,7 @@ impl Server {
     }
 
     pub fn send_transaction(tx: &Transaction, _utxoset: UTXOSet, chain: i32) -> Result<()> {
-        let server = Server::new("7000", "", chain)?;
+        let server = Server::new("7000", "")?;
         server.send_tx(KNOWN_NODE1, tx, chain)?;
         Ok(())
     }
@@ -589,7 +581,7 @@ mod test {
         let wa1 = ws.create_wallet();
         let bc = Blockchain::create_blockchain(wa1).unwrap();
         let _utxo_set = UTXOSet { blockchain: bc };
-        let server = Server::new("7878", "localhost:3001", 1).unwrap();
+        let server = Server::new("7878", "localhost:3001").unwrap();
 
         let vmsg = Versionmsg {
             addr_from: server.node_address.clone(),
