@@ -13,6 +13,7 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::*;
 use std::thread;
 use std::time::Duration;
+use crate::blockchain::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 enum Message {
@@ -81,8 +82,28 @@ const CMD_LEN: usize = 12;
 const VERSION: i32 = 1;
 
 impl Server {
-    pub fn new(port: &str, miner_address: &str, utxo: UTXOSet) -> Result<Server> {
+    pub fn new(port: &str, miner_address: &str, chain: i32) -> Result<Server> {
+
+
+        let utxo = match chain {
+            1 => {
+                let bc = Blockchain::new()?;
+                let utxo_set = UTXOSet { blockchain: bc };
+                utxo_set
+            },
+            2 =>{ 
+                let bc1 = Blockchain::new2()?;
+                let utxo_set1 = UTXOSet { blockchain: bc1 };                
+                utxo_set1
+            
+            },
+            _ => panic!("Unknown chain index!")
+        };
+
+
         let mut node_set = HashSet::new();
+
+
         node_set.insert(String::from(KNOWN_NODE1));
         Ok(Server {
             node_address: String::from("localhost:") + port,
@@ -132,8 +153,8 @@ impl Server {
         Ok(())
     }
 
-    pub fn send_transaction(tx: &Transaction, utxoset: UTXOSet) -> Result<()> {
-        let server = Server::new("7000", "", utxoset)?;
+    pub fn send_transaction(tx: &Transaction, _utxoset: UTXOSet, chain: i32) -> Result<()> {
+        let server = Server::new("7000", "", chain)?;
         server.send_tx(KNOWN_NODE1, tx)?;
         Ok(())
     }
@@ -555,7 +576,7 @@ mod test {
         let wa1 = ws.create_wallet();
         let bc = Blockchain::create_blockchain(wa1).unwrap();
         let utxo_set = UTXOSet { blockchain: bc };
-        let server = Server::new("7878", "localhost:3001", utxo_set).unwrap();
+        let server = Server::new("7878", "localhost:3001", 1).unwrap();
 
         let vmsg = Versionmsg {
             addr_from: server.node_address.clone(),

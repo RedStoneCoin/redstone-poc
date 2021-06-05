@@ -139,12 +139,9 @@ impl Cli {
             if let Some(port) = matches.value_of("port") {
 
                 println!("Starting node!");
-                let bc = Blockchain::new()?;
-                let utxo_set = UTXOSet { blockchain: bc };
-                let bc1 = Blockchain::new2()?;
-                let utxo_set1 = UTXOSet { blockchain: bc1 };
-                let server = Server::new(port, "", utxo_set,)?;
-                let server1 = Server::new(port, "", utxo_set1)?;
+    
+                let server = Server::new(port, "", 1)?;
+                let server1 = Server::new(port, "", 2)?;
                 println!("Starting node!");
                 
                 
@@ -187,12 +184,8 @@ impl Cli {
                 exit(1)
             };
             println!("Start miner node...");
-            let bc = Blockchain::new()?;
-            let utxo_set = UTXOSet { blockchain: bc };
-            let server = Server::new(port, address, utxo_set)?;
-            let bc1 = Blockchain::new2()?;
-            let utxo_set1 = UTXOSet { blockchain: bc1 };
-            let server1 = Server::new(port, address, utxo_set1)?;
+            let server = Server::new(port, address, chain)?;
+            let server1 = Server::new(port, address, chain)?;
            
             match chain {
                 1 =>  {
@@ -263,14 +256,14 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
             let bc = Blockchain::new()?;
             let  utxo_set = UTXOSet { blockchain: bc };
             let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
-            Server::send_transaction(&tx, utxo_set)?;
+            Server::send_transaction(&tx, utxo_set,1)?;
             }
             2 => {
             // handle chain 1
             let bc1 = Blockchain::new2()?;
             let  utxo_set1 = UTXOSet { blockchain: bc1 };
             let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
-            Server::send_transaction(&tx1, utxo_set1)?;
+            Server::send_transaction(&tx1, utxo_set1,2)?;
 
             }
             
