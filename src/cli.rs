@@ -151,13 +151,13 @@ impl Cli {
                     1 =>  {
                         println!("Starting node on {}", chain);
 
-                        server.start_server()?;
+                        server.start_server(chain)?;
 
                     },
                     2 => { 
                         println!("Starting node on {}", chain);
 
-                        server1.start_server()?;
+                        server1.start_server(chain)?;
                     }   ,
                     _ => panic!("Unknown chain index!")
                 };
@@ -191,13 +191,13 @@ impl Cli {
                 1 =>  {
                     println!("Starting node on {}", chain);
 
-                    server.start_server()?;
+                    server.start_server(chain)?;
 
                 },
                 2 => { 
                     println!("Starting node on {}", chain);
 
-                    server1.start_server()?;
+                    server1.start_server(chain)?;
                 }   ,
                 _ => panic!("Unknown chain index!")
             };
@@ -228,7 +228,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
             println!("Sending to chain 2");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set1.blockchain.mine_block(vec![cbtx, tx1],2)?;
-            utxo_set1.update(&new_block,2)?;
+            utxo_set1.update(&new_block,chain)?;
             println!("success!");
             }
             1 => {
@@ -241,7 +241,7 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
             println!("Sending to chain 1");
             let cbtx = Transaction::new_coinbase(from.to_string(), String::from("reward!"))?;
             let new_block = utxo_set.blockchain.mine_block(vec![cbtx, tx,],1)?;
-            utxo_set.update(&new_block,1)?;
+            utxo_set.update(&new_block,chain)?;
             println!("success!");
             }_ => {
                println!("Unknown chain index: {}", chain);
@@ -253,17 +253,20 @@ fn cmd_send(from: &str, to: &str, amount: i32, mine_now: bool, chain: i32) -> Re
         match chain {
             1 => {
             // handle chain 1
-            let bc = Blockchain::new()?;
-            let  utxo_set = UTXOSet { blockchain: bc };
-            let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set)?;
-            Server::send_transaction(&tx, utxo_set,1)?;
+            let bc1 = Blockchain::new2()?;
+            let mut utxo_set1 = UTXOSet { blockchain: bc1 };
+            let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
+            Server::send_transaction(&tx1, utxo_set1,chain)?;
+            println!("Send chain: {}", chain)
+
             }
             2 => {
             // handle chain 1
-            let bc1 = Blockchain::new2()?;
-            let  utxo_set1 = UTXOSet { blockchain: bc1 };
-            let tx1 = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
-            Server::send_transaction(&tx1, utxo_set1,2)?;
+            let bc = Blockchain::new()?;
+            let mut utxo_set1 = UTXOSet { blockchain: bc };
+            let tx = Transaction::new_UTXO(wallet, to, amount, &utxo_set1)?;
+            Server::send_transaction(&tx, utxo_set1,chain)?;
+            println!("Send chain: {}", chain)
 
             }
             
