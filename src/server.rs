@@ -30,11 +30,15 @@ enum Message {
 struct Blockmsg {
     addr_from: String,
     block: Block,
+    chain: i32,
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct GetBlocksmsg {
     addr_from: String,
+    chain: i32,
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -42,6 +46,8 @@ struct GetDatamsg {
     addr_from: String,
     kind: String,
     id: String,
+    chain: i32,
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -49,6 +55,7 @@ struct Invmsg {
     addr_from: String,
     kind: String,
     items: Vec<String>,
+    chain: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -280,6 +287,7 @@ impl Server {
         let data = Blockmsg {
             addr_from: self.node_address.clone(),
             block: b.clone(),
+            chain: chain.clone(),
         };
         let data = serialize(&(cmd_to_bytes("block"), data))?;
         self.send_data(addr, &data,chain)
@@ -301,6 +309,7 @@ impl Server {
             addr_from: self.node_address.clone(),
             kind: kind.to_string(),
             items,
+            chain: chain.clone(),
         };
         let data = serialize(&(cmd_to_bytes("inv"), data))?;
         self.send_data(addr, &data,chain)
@@ -310,6 +319,7 @@ impl Server {
         println!("send get blocks message to: {}", addr);
         let data = GetBlocksmsg {
             addr_from: self.node_address.clone(),
+            chain: chain.clone(),
         };
         let data = serialize(&(cmd_to_bytes("getblocks"), data))?;
         self.send_data(addr, &data,chain)
@@ -324,6 +334,8 @@ impl Server {
             addr_from: self.node_address.clone(),
             kind: kind.to_string(),
             id: id.to_string(),
+            chain: chain.clone(),
+
         };
         let data = serialize(&(cmd_to_bytes("getdata"), data))?;
         self.send_data(addr, &data,chain)
