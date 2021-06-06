@@ -1,5 +1,5 @@
 //! server of Blockchain
-
+#![allow(warnings, unused)]
 use super::*;
 use crate::block::*;
 use crate::transaction::*;
@@ -91,17 +91,8 @@ const CMD_LEN: usize = 12;
 const VERSION: i32 = 1;
 
 impl Server {
-    pub fn new(port: &str, miner_address: &str) -> Result<Server> {
+    pub fn new(port: &str, miner_address: &str,utxo: UTXOSet,utxo1: UTXOSet) -> Result<Server> {
 
-        let bc = Blockchain::new()?;
-        let bc1 = Blockchain::new2()?;
-        
-        let utxo_set = UTXOSet { blockchain: bc };
-       
-        let utxo_set1 = UTXOSet { blockchain: bc1 };    
-       
-        let utxo = utxo_set;
-        let utxo1 = utxo_set1;
 
         let mut node_set = HashSet::new();
 
@@ -137,14 +128,20 @@ impl Server {
         );
 
         thread::spawn(move || {
+            println!(
+                "Started chain 1 check");
             thread::sleep(Duration::from_millis(1000));
             if server1.get_best_height(1)? == -1 {
                 server1.request_blocks(1)
             }else {
                 server1.send_version(KNOWN_NODE1,1)
             }
+
+            
         });
         thread::spawn(move || {
+            println!(
+                "Started chain 2 check");
             thread::sleep(Duration::from_millis(1000));
             if server2.get_best_height(2)? == -1 {
                 server2.request_blocks(2)
@@ -155,7 +152,6 @@ impl Server {
         
         // end
         let listener = TcpListener::bind(&self.node_address).unwrap();
-        let listener1 = TcpListener::bind(&self.node_address).unwrap();
         println!("Server listen...");
 
         for stream in listener.incoming() {
@@ -166,10 +162,16 @@ impl Server {
                 mining_address: self.mining_address.clone(),
                 inner: Arc::clone(&self.inner),
             };
+
+            let server2 = Server {
+                node_address: self.node_address.clone(),
+                mining_address: self.mining_address.clone(),
+                inner: Arc::clone(&self.inner),
+            };
             thread::spawn(move || server1.handle_connection(stream,1));
+
         }
-        println!("Server listen 1...");
-        for stream in listener1.incoming() {
+        for stream in listener.incoming() {
             let stream = stream?;
 
             let server1 = Server {
@@ -184,8 +186,8 @@ impl Server {
         Ok(())
     }
 
-    pub fn send_transaction(tx: &Transaction, _utxoset: UTXOSet, chain: i32) -> Result<()> {
-        let server = Server::new("7000", "")?;
+    pub fn send_transaction(tx: &Transaction, utxo: UTXOSet, chain: i32, utxo1: UTXOSet) -> Result<()> {
+        let server = Server::new("7000", "",utxo,utxo1)?;
         server.send_tx(KNOWN_NODE1, tx, chain)?;
         Ok(())
     }
