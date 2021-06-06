@@ -126,31 +126,59 @@ impl Server {
             mining_address: self.mining_address.clone(),
             inner: Arc::clone(&self.inner),
         };
+        let server2 = Server {
+            node_address: self.node_address.clone(),
+            mining_address: self.mining_address.clone(),
+            inner: Arc::clone(&self.inner),
+        };
         println!(
-            "Start server at {}, minning address: {}",
+            "Started server at {}, minning address: {}",
             &self.node_address, &self.mining_address
         );
 
         thread::spawn(move || {
             thread::sleep(Duration::from_millis(1000));
-            if server1.get_best_height(chain)? == -1 {
-                server1.request_blocks(chain)
-            } else {
-                server1.send_version(KNOWN_NODE1,chain)
+            if server1.get_best_height(1)? == -1 {
+                server1.request_blocks(1)
+            }else {
+                server1.send_version(KNOWN_NODE1,1)
             }
         });
+        thread::spawn(move || {
+            thread::sleep(Duration::from_millis(1000));
+            if server2.get_best_height(2)? == -1 {
+                server2.request_blocks(2)
+            }else {
+                server2.send_version(KNOWN_NODE1,2)
+            }
+        });
+        
         // end
         let listener = TcpListener::bind(&self.node_address).unwrap();
+        let listener1 = TcpListener::bind(&self.node_address).unwrap();
         println!("Server listen...");
 
         for stream in listener.incoming() {
             let stream = stream?;
+
             let server1 = Server {
                 node_address: self.node_address.clone(),
                 mining_address: self.mining_address.clone(),
                 inner: Arc::clone(&self.inner),
             };
-            thread::spawn(move || server1.handle_connection(stream,chain));
+            thread::spawn(move || server1.handle_connection(stream,1));
+        }
+        println!("Server listen 1...");
+        for stream in listener1.incoming() {
+            let stream = stream?;
+
+            let server1 = Server {
+                node_address: self.node_address.clone(),
+                mining_address: self.mining_address.clone(),
+                inner: Arc::clone(&self.inner),
+            };
+
+            thread::spawn(move || server1.handle_connection(stream,2));
         }
 
         Ok(())
