@@ -16,6 +16,7 @@ This is the offical implemention of the redstone protocol. It is written in rust
 - [x]  Added node saving to database by header egg if header 1 save to chain 1 database.
 - [ ] 2 chain validation (if necesery)
 - [ ] block reward (if necesery)
+- [ ] P2P: In every function add if chain 2 to use utxo1 insted of utxo 2 so add utxo handler
 - [x] Simple p2p implemetation of blockchain
 - [x] Signing with wallet and sending txt to the blockchain
 - [x] Simple node

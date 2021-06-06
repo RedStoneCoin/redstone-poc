@@ -94,9 +94,12 @@ impl Server {
     pub fn new(port: &str, miner_address: &str) -> Result<Server> {
 
         let bc = Blockchain::new()?;
-        let utxo_set = UTXOSet { blockchain: bc };
         let bc1 = Blockchain::new2()?;
+        
+        let utxo_set = UTXOSet { blockchain: bc };
+       
         let utxo_set1 = UTXOSet { blockchain: bc1 };    
+       
         let utxo = utxo_set;
         let utxo1 = utxo_set1;
 
@@ -130,7 +133,7 @@ impl Server {
 
         thread::spawn(move || {
             thread::sleep(Duration::from_millis(1000));
-            if server1.get_best_height()? == -1 {
+            if server1.get_best_height(chain)? == -1 {
                 server1.request_blocks(chain)
             } else {
                 server1.send_version(KNOWN_NODE1,chain)
@@ -209,12 +212,27 @@ impl Server {
         self.inner.lock().unwrap().mempool.clear()
     }
 
-    fn get_best_height(&self) -> Result<i32> {
-        self.inner.lock().unwrap().utxo.blockchain.get_best_height()
+    fn get_best_height(&self,chain: i32) -> Result<i32> {
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.blockchain.get_best_height()
+            }
+            2 =>{
+                self.inner.lock().unwrap().utxo1.blockchain.get_best_height()
+            }_ => panic!("Unknown chain index!")
+        }
     }
 
-    fn get_block_hashs(&self) -> Vec<String> {
-        self.inner.lock().unwrap().utxo.blockchain.get_block_hashs()
+    fn get_block_hashs(&self,chain: i32) -> Vec<String> {
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.blockchain.get_block_hashs()
+            }
+            
+            2 =>{
+                self.inner.lock().unwrap().utxo1.blockchain.get_block_hashs()
+            }_ => panic!("Unknown chain index!")
+        }
     }
 
     fn get_block(&self, block_hash: &str) -> Result<Block> {
@@ -235,16 +253,40 @@ impl Server {
             .verify_transacton(tx)
     }
 
-    fn add_block(&self, block: Block) -> Result<()> {
-        self.inner.lock().unwrap().utxo.blockchain.add_block(block)
+    fn add_block(&self, block: Block,chain: i32) -> Result<()> {
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.blockchain.add_block(block)
+            }
+            
+            2 =>{
+                self.inner.lock().unwrap().utxo1.blockchain.add_block(block)
+            }_ => panic!("Unknown chain index!")
+        }
     }
 
     fn mine_block(&self, txs: Vec<Transaction,>,chain: i32) -> Result<Block> {
-        self.inner.lock().unwrap().utxo.blockchain.mine_block(txs, chain)
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.blockchain.mine_block(txs, chain)
+            }
+            
+            2 =>{
+                self.inner.lock().unwrap().utxo1.blockchain.mine_block(txs, chain)
+            }_ => panic!("Unknown chain index!")
+        }
     }
 
-    fn utxo_reindex(&self) -> Result<()> {
-        self.inner.lock().unwrap().utxo.reindex()
+    fn utxo_reindex(&self,chain: i32) -> Result<()> {
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.reindex()
+            }
+            
+            2 =>{
+                self.inner.lock().unwrap().utxo1.reindex()
+            }_ => panic!("Unknown chain index!")
+        }
     }
 
     /* -----------------------------------------------------*/
@@ -348,7 +390,7 @@ impl Server {
         println!("send version info to: {}", addr);
         let data = Versionmsg {
             addr_from: self.node_address.clone(),
-            best_height: self.get_best_height()?,
+            best_height: self.get_best_height(chain)?,
             version: VERSION,
         };
         let data = serialize(&(cmd_to_bytes("version"), data))?;
@@ -357,7 +399,7 @@ impl Server {
 
     fn handle_version(&self, msg: Versionmsg,chain: i32) -> Result<()> {
         println!("receive version msg: {:#?}", msg);
-        let my_best_height = self.get_best_height()?;
+        let my_best_height = self.get_best_height(chain)?;
         if my_best_height < msg.best_height {
             self.send_get_blocks(&msg.addr_from,chain)?;
         } else if my_best_height > msg.best_height {
@@ -387,7 +429,7 @@ impl Server {
             msg.addr_from,
             msg.block.get_hash()
         );
-        self.add_block(msg.block)?;
+        self.add_block(msg.block,msg.chain)?;
 
         let mut in_transit = self.get_in_transit();
         if in_transit.len() > 0 {
@@ -396,7 +438,7 @@ impl Server {
             in_transit.remove(0);
             self.replace_in_transit(in_transit);
         } else {
-            self.utxo_reindex()?;
+            self.utxo_reindex(msg.chain)?;
         }
 
         Ok(())
@@ -431,7 +473,7 @@ impl Server {
 
     fn handle_get_blocks(&self, msg: GetBlocksmsg,chain: i32) -> Result<()> {
         println!("receive get blocks msg: {:#?}", msg);
-        let block_hashs = self.get_block_hashs();
+        let block_hashs = self.get_block_hashs(chain);
         self.send_inv(&msg.addr_from, "block", block_hashs,chain)?;
         Ok(())
     }
@@ -485,7 +527,7 @@ impl Server {
                     }
 
                     let new_block = self.mine_block(txs,msg.chain)?;
-                    self.utxo_reindex()?;
+                    self.utxo_reindex(msg.chain)?;
 
                     for node in self.get_known_nodes() {
                         if node != self.node_address {
@@ -585,7 +627,7 @@ mod test {
 
         let vmsg = Versionmsg {
             addr_from: server.node_address.clone(),
-            best_height: server.get_best_height().unwrap(),
+            best_height: server.get_best_height(1).unwrap(),
             version: VERSION,
         };
         let data = serialize(&(cmd_to_bytes("version"), vmsg.clone())).unwrap();
