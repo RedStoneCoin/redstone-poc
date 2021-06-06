@@ -141,28 +141,26 @@ impl Cli {
                 println!("Starting node!");
     
                 let server = Server::new(port, "")?;
-                let server1 = Server::new(port, "")?;
-                println!("Starting node!");
-                
-                
-
-    
+            
+           
                 match chain {
                     1 =>  {
                         println!("Starting node on {}", chain);
-
-                        server.start_server(chain)?;
-
+    
+                        server.start_server(1)?;
+    
                     },
                     2 => { 
                         println!("Starting node on {}", chain);
-
-                        server1.start_server(chain)?;
+    
+                        server.start_server(2)?;
                     }   ,
                     _ => panic!("Unknown chain index!")
                 };
-                println!("END");
+               
                 
+
+    
             }
         } else if let Some(ref matches) = matches.subcommand_matches("startminer") {
             let chain: i32 = if let Some(chain) = matches.value_of("chain") {
@@ -185,7 +183,7 @@ impl Cli {
             };
             println!("Start miner node...");
             let server = Server::new(port, address)?;
-            let server1 = Server::new(port, address)?;
+            
            
             match chain {
                 1 =>  {
@@ -197,7 +195,7 @@ impl Cli {
                 2 => { 
                     println!("Starting node on {}", chain);
 
-                    server1.start_server(2)?;
+                    server.start_server(2)?;
                 }   ,
                 _ => panic!("Unknown chain index!")
             };

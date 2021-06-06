@@ -473,7 +473,7 @@ impl Server {
 
     fn handle_get_blocks(&self, msg: GetBlocksmsg,chain: i32) -> Result<()> {
         println!("receive get blocks msg: {:#?}", msg);
-        let block_hashs = self.get_block_hashs(chain);
+        let block_hashs = self.get_block_hashs(msg.chain);
         self.send_inv(&msg.addr_from, "block", block_hashs,chain)?;
         Ok(())
     }
@@ -482,10 +482,10 @@ impl Server {
         println!("receive get data msg: {:#?}", msg);
         if msg.kind == "block" {
             let block = self.get_block(&msg.id)?;
-            self.send_block(&msg.addr_from, &block,chain)?;
+            self.send_block(&msg.addr_from, &block,msg.chain)?;
         } else if msg.kind == "tx" {
             let tx = self.get_mempool_tx(&msg.id).unwrap();
-            self.send_tx(&msg.addr_from, &tx,chain)?;
+            self.send_tx(&msg.addr_from, &tx,msg.chain)?;
         }
         Ok(())
     }
@@ -498,7 +498,7 @@ impl Server {
         if self.node_address == KNOWN_NODE1 {
             for node in known_nodes {
                 if node != self.node_address && node != msg.addr_from {
-                    self.send_inv(&node, "tx", vec![msg.transaction.id.clone()],chain)?;
+                    self.send_inv(&node, "tx", vec![msg.transaction.id.clone()],msg.chain)?;
                 }
             }
         } else {
@@ -531,7 +531,7 @@ impl Server {
 
                     for node in self.get_known_nodes() {
                         if node != self.node_address {
-                            self.send_inv(&node, "block", vec![new_block.get_hash()],chain)?;
+                            self.send_inv(&node, "block", vec![new_block.get_hash()],msg.chain)?;
                         }
                     }
 
