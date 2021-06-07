@@ -267,9 +267,10 @@ impl Blockchain {
 
     /// GetBestHeight returns the height of the latest block
     pub fn get_best_height(&self,chain: i32) -> Result<i32> {
+        //fixed
         let wchain = match chain {
-            1 => "data2/blocks",
-            2 => "data/blocks",
+            2 => "data2/blocks",
+            1 => "data/blocks",
             _ => panic!("Unknown chain index!")
         };
         let db = sled::open(wchain)?;
