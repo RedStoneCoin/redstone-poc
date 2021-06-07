@@ -122,7 +122,7 @@ impl Blockchain {
             String::from_utf8(lasthash.to_vec())?,
             String::from_utf8(lasthash1.to_vec())?,
             String::from(Header),
-            self.get_best_height()? + 1,
+            self.get_best_height(chain)? + 1,
         )?;
         self.db.insert(newblock.get_hash(), serialize(&newblock)?)?;
         self.db.insert("LAST", newblock.get_hash().as_bytes())?;
@@ -227,37 +227,58 @@ impl Blockchain {
     }
 
     /// AddBlock saves the block into the blockchain
-    pub fn add_block(&mut self, block: Block) -> Result<()> {
+    pub fn add_block(&mut self, block: Block,chain: i32) -> Result<()> {
+        let wchain = match chain {
+            2 => "data2/blocks",
+            1 => "data/blocks",
+            _ => panic!("Unknown chain index!")
+        };
+
+        let db1 = sled::open(wchain)?;
         let data = serialize(&block)?;
-        if let Some(_) = self.db.get(block.get_hash())? {
+        if let Some(_) = db1.get(block.get_hash())? {
             return Ok(());
         }
-        self.db.insert(block.get_hash(), data)?;
+        db1.insert(block.get_hash(), data)?;
 
-        let lastheight = self.get_best_height()?;
+        let lastheight = self.get_best_height(chain)?;
         if block.get_height() > lastheight {
-            self.db.insert("LAST", block.get_hash().as_bytes())?;
+            db1.insert("LAST", block.get_hash().as_bytes())?;
             self.tip = block.get_hash();
-            self.db.flush()?;
+            db1.flush()?;
         }
         Ok(())
     }
 
     // GetBlock finds a block by its hash and returns it
-    pub fn get_block(&self, block_hash: &str) -> Result<Block> {
-        let data = self.db.get(block_hash)?.unwrap();
+    pub fn get_block(&self, block_hash: &str,chain: i32) -> Result<Block> {
+        let wchain = match chain {
+            2 => "data2/blocks",
+            1 => "data/blocks",
+            _ => panic!("Unknown chain index!")
+        };
+        let db1 = sled::open(wchain)?;
+        
+
+        let data = db1.get(block_hash)?.unwrap();
         let block = deserialize(&data.to_vec())?;
         Ok(block)
     }
 
     /// GetBestHeight returns the height of the latest block
-    pub fn get_best_height(&self) -> Result<i32> {
-        let lasthash = if let Some(h) = self.db.get("LAST")? {
+    pub fn get_best_height(&self,chain: i32) -> Result<i32> {
+        let wchain = match chain {
+            1 => "data2/blocks",
+            2 => "data/blocks",
+            _ => panic!("Unknown chain index!")
+        };
+        let db = sled::open(wchain)?;
+        let lasthash = if let Some(h) = db.get("LAST")? {
             h
         } else {
             return Ok(-1);
         };
-        let last_data = self.db.get(lasthash)?.unwrap();
+        let last_data = db.get(lasthash)?.unwrap();
         let last_block: Block = deserialize(&last_data.to_vec())?;
         Ok(last_block.get_height())
     }

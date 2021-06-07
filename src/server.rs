@@ -128,17 +128,14 @@ impl Server {
             "Started server at {}, minning address: {}",
             &self.node_address, &self.mining_address
         );
-
+//sync
         thread::spawn(move || {
             println!(
                 "Started chain 1 check");
             thread::sleep(Duration::from_millis(1000));
-            if server1.get_best_height(1)? == -1 {
+            
                 server1.request_blocks(1)
-            }else {
-                server1.send_version(KNOWN_NODE1,1)
-            }
-
+          
             
         });
         thread::spawn(move || {
@@ -241,10 +238,10 @@ impl Server {
     fn get_best_height(&self,chain: i32) -> Result<i32> {
         match chain {
             1 =>{
-                self.inner.lock().unwrap().utxo.blockchain.get_best_height()
+                self.inner.lock().unwrap().utxo.blockchain.get_best_height(1)
             }
             2 =>{
-                self.inner.lock().unwrap().utxo1.blockchain.get_best_height()
+                self.inner.lock().unwrap().utxo1.blockchain.get_best_height(2)
             }_ => panic!("Unknown chain index!")
         }
     }
@@ -261,13 +258,13 @@ impl Server {
         }
     }
 
-    fn get_block(&self, block_hash: &str) -> Result<Block> {
+    fn get_block(&self, block_hash: &str,chain: i32) -> Result<Block> {
         self.inner
             .lock()
             .unwrap()
             .utxo
             .blockchain
-            .get_block(block_hash)
+            .get_block(block_hash,chain)
     }
 
     fn verify_tx(&self, tx: &Transaction) -> Result<bool> {
@@ -282,11 +279,11 @@ impl Server {
     fn add_block(&self, block: Block,chain: i32) -> Result<()> {
         match chain {
             1 =>{
-                self.inner.lock().unwrap().utxo.blockchain.add_block(block)
+                self.inner.lock().unwrap().utxo.blockchain.add_block(block,1)
             }
             
             2 =>{
-                self.inner.lock().unwrap().utxo1.blockchain.add_block(block)
+                self.inner.lock().unwrap().utxo1.blockchain.add_block(block,2)
             }_ => panic!("Unknown chain index!")
         }
     }
@@ -428,13 +425,16 @@ impl Server {
     fn handle_version(&self, msg: Versionmsg,chain: i32) -> Result<()> {
         println!("receive version msg: {:#?}", msg);
         let my_best_height = self.get_best_height(msg.chain)?;
+        
         if my_best_height < msg.best_height {
-            self.send_get_blocks(&msg.addr_from,chain)?;
+            self.send_get_blocks(&msg.addr_from,msg.chain)?;
+            println!("Syncing....");
+
         } else if my_best_height > msg.best_height {
-            self.send_version(&msg.addr_from,chain)?;
+            self.send_version(&msg.addr_from,msg.chain)?;
         }
 
-        self.send_addr(&msg.addr_from,chain)?;
+        self.send_addr(&msg.addr_from,msg.chain)?;
 
         if !self.node_is_known(&msg.addr_from) {
             self.add_nodes(&msg.addr_from);
@@ -462,7 +462,7 @@ impl Server {
         let mut in_transit = self.get_in_transit();
         if in_transit.len() > 0 {
             let block_hash = &in_transit[0];
-            self.send_get_data(&msg.addr_from, "block", block_hash,chain)?;
+            self.send_get_data(&msg.addr_from, "block", block_hash,msg.chain)?;
             in_transit.remove(0);
             self.replace_in_transit(in_transit);
         } else {
@@ -476,7 +476,7 @@ impl Server {
         println!("receive inv msg: {:#?}", msg);
         if msg.kind == "block" {
             let block_hash = &msg.items[0];
-            self.send_get_data(&msg.addr_from, "block", block_hash,chain)?;
+            self.send_get_data(&msg.addr_from, "block", block_hash,msg.chain)?;
 
             let mut new_in_transit = Vec::new();
             for b in &msg.items {
@@ -490,10 +490,10 @@ impl Server {
             match self.get_mempool_tx(txid) {
                 Some(tx) => {
                     if tx.id.is_empty() {
-                        self.send_get_data(&msg.addr_from, "tx", txid,chain)?
+                        self.send_get_data(&msg.addr_from, "tx", txid,msg.chain)?
                     }
                 }
-                None => self.send_get_data(&msg.addr_from, "tx", txid,chain)?,
+                None => self.send_get_data(&msg.addr_from, "tx", txid,msg.chain)?,
             }
         }
         Ok(())
@@ -502,15 +502,18 @@ impl Server {
     fn handle_get_blocks(&self, msg: GetBlocksmsg,chain: i32) -> Result<()> {
         println!("receive get blocks msg: {:#?}", msg);
         let block_hashs = self.get_block_hashs(msg.chain);
-        self.send_inv(&msg.addr_from, "block", block_hashs,chain)?;
+        self.send_inv(&msg.addr_from, "block", block_hashs,msg.chain)?;
         Ok(())
     }
 
     fn handle_get_data(&self, msg: GetDatamsg,chain: i32) -> Result<()> {
         println!("receive get data msg: {:#?}", msg);
         if msg.kind == "block" {
-            let block = self.get_block(&msg.id)?;
+            println!("Kind: Block");
+
+            let block = self.get_block(&msg.id,msg.chain)?;
             self.send_block(&msg.addr_from, &block,msg.chain)?;
+            println!("Started sending data");
         } else if msg.kind == "tx" {
             let tx = self.get_mempool_tx(&msg.id).unwrap();
             self.send_tx(&msg.addr_from, &tx,msg.chain)?;
