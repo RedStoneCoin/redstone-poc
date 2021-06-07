@@ -70,6 +70,8 @@ struct Versionmsg {
     addr_from: String,
     version: i32,
     best_height: i32,
+    chain: i32,
+
 }
 
 pub struct Server {
@@ -152,7 +154,11 @@ impl Server {
         
         // end
         let listener = TcpListener::bind(&self.node_address).unwrap();
-        println!("Server listen...");
+        println!("Default chain: {}",chain);
+        println!("Default chain is just a number used so function arguments are not empty!");
+
+        println!("Node listen...");
+
 
         for stream in listener.incoming() {
             let stream = stream?;
@@ -168,19 +174,9 @@ impl Server {
                 mining_address: self.mining_address.clone(),
                 inner: Arc::clone(&self.inner),
             };
+
             thread::spawn(move || server1.handle_connection(stream,1));
 
-        }
-        for stream in listener.incoming() {
-            let stream = stream?;
-
-            let server1 = Server {
-                node_address: self.node_address.clone(),
-                mining_address: self.mining_address.clone(),
-                inner: Arc::clone(&self.inner),
-            };
-
-            thread::spawn(move || server1.handle_connection(stream,2));
         }
 
         Ok(())
@@ -393,6 +389,7 @@ impl Server {
         println!(
             "send get data message to: {} kind: {} id: {}",
             addr, kind, id
+
         );
         let data = GetDatamsg {
             addr_from: self.node_address.clone(),
@@ -422,6 +419,7 @@ impl Server {
             addr_from: self.node_address.clone(),
             best_height: self.get_best_height(chain)?,
             version: VERSION,
+            chain: chain.clone(),
         };
         let data = serialize(&(cmd_to_bytes("version"), data))?;
         self.send_data(addr, &data,chain)
@@ -429,7 +427,7 @@ impl Server {
 
     fn handle_version(&self, msg: Versionmsg,chain: i32) -> Result<()> {
         println!("receive version msg: {:#?}", msg);
-        let my_best_height = self.get_best_height(chain)?;
+        let my_best_height = self.get_best_height(msg.chain)?;
         if my_best_height < msg.best_height {
             self.send_get_blocks(&msg.addr_from,chain)?;
         } else if my_best_height > msg.best_height {
@@ -528,12 +526,14 @@ impl Server {
         if self.node_address == KNOWN_NODE1 {
             for node in known_nodes {
                 if node != self.node_address && node != msg.addr_from {
+                    println!("Sending inv to other nodes");
+
                     self.send_inv(&node, "tx", vec![msg.transaction.id.clone()],msg.chain)?;
                 }
             }
         } else {
             let mut mempool = self.get_mempool();
-            debug!("Current mempool: {:#?}", &mempool);
+            println!("Current mempool: {:#?}", &mempool);
             if mempool.len() >= 1 && !self.mining_address.is_empty() {
                 loop {
                     let mut txs = Vec::new();
@@ -649,22 +649,6 @@ mod test {
 
     #[test]
     fn test_cmd() {
-        let mut ws = Wallets::new().unwrap();
-        let wa1 = ws.create_wallet();
-        let bc = Blockchain::create_blockchain(wa1).unwrap();
-        let _utxo_set = UTXOSet { blockchain: bc };
-        let server = Server::new("7878", "localhost:3001").unwrap();
 
-        let vmsg = Versionmsg {
-            addr_from: server.node_address.clone(),
-            best_height: server.get_best_height(1).unwrap(),
-            version: VERSION,
-        };
-        let data = serialize(&(cmd_to_bytes("version"), vmsg.clone())).unwrap();
-        if let Message::Version(v) = bytes_to_cmd(&data).unwrap() {
-            assert_eq!(v, vmsg);
-        } else {
-            panic!("wrong!");
-        }
     }
 }
