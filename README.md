@@ -8,8 +8,8 @@ This is the offical implemention of the redstone protocol. It is written in rust
 - [x] Making p2p tx
 - [x] Sending p2p block req
 - [x] Reciving p2p inv block req
-- [] Adding block
-- [] Finding new nodes
+- [ ] Adding block
+- [ ] Finding new nodes
 ### To do
 - [x] Every block to include hedder egg chain 1 and prev hash from other chain if header is chain 1 look chain 2
 - [x]  Custom save 2 databses
