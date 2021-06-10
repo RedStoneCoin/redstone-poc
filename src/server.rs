@@ -133,9 +133,7 @@ impl Server {
             println!(
                 "Started chain 1 check");
             thread::sleep(Duration::from_millis(1000));
-            
-                server1.request_blocks(1)
-          
+            server1.request_blocks(1)
             
         });
         thread::spawn(move || {
@@ -238,10 +236,10 @@ impl Server {
     fn get_best_height(&self,chain: i32) -> Result<i32> {
         match chain {
             1 =>{
-                self.inner.lock().unwrap().utxo.blockchain.get_best_height(1)
+                self.inner.lock().unwrap().utxo.blockchain.get_best_height1()
             }
             2 =>{
-                self.inner.lock().unwrap().utxo1.blockchain.get_best_height(2)
+                self.inner.lock().unwrap().utxo1.blockchain.get_best_height1()
             }_ => panic!("Unknown chain index!")
         }
     }
@@ -279,11 +277,11 @@ impl Server {
     fn add_block(&self, block: Block,chain: i32) -> Result<()> {
         match chain {
             1 =>{
-                self.inner.lock().unwrap().utxo.blockchain.add_block(block,1)
+                self.inner.lock().unwrap().utxo.blockchain.add_block(block)
             }
             
             2 =>{
-                self.inner.lock().unwrap().utxo1.blockchain.add_block(block,2)
+                self.inner.lock().unwrap().utxo1.blockchain.add_block(block)
             }_ => panic!("Unknown chain index!")
         }
     }
@@ -458,6 +456,7 @@ impl Server {
             msg.block.get_hash()
         );
         self.add_block(msg.block,msg.chain)?;
+        println!("1");
 
         let mut in_transit = self.get_in_transit();
         if in_transit.len() > 0 {
@@ -510,8 +509,17 @@ impl Server {
         println!("receive get data msg: {:#?}", msg);
         if msg.kind == "block" {
             println!("Kind: Block");
-
-            let block = self.get_block(&msg.id,msg.chain)?;
+            let block = match msg.chain {
+                1 =>{
+                    self.inner.lock().unwrap().utxo.blockchain.get_block(&msg.id,msg.chain)?
+                }
+                
+                2 =>{
+                    self.inner.lock().unwrap().utxo1.blockchain.get_block(&msg.id,msg.chain)?
+                }_ => panic!("Unknown chain index!")
+            };
+ 
+            println!("Kind: Block1");
             self.send_block(&msg.addr_from, &block,msg.chain)?;
             println!("Started sending data");
         } else if msg.kind == "tx" {

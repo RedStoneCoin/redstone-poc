@@ -2,6 +2,8 @@
 
 use super::*;
 use crate::utxoset::*;
+use crate::blockchain::*;
+
 use crate::wallets::*;
 use bincode::serialize;
 use bitcoincash_addr::Address;
@@ -48,7 +50,7 @@ pub struct Transaction {
 impl Transaction {
     /// NewUTXOTransaction creates a new transaction
     pub fn new_UTXO(wallet: &Wallet, to: &str, amount: i32, utxo: &UTXOSet) -> Result<Transaction> {
-        println!(
+        info!(
             "new UTXO Transaction from: {} to: {}",
             wallet.get_address(),
             to
@@ -95,6 +97,7 @@ impl Transaction {
             .sign_transacton(&mut tx, &wallet.secret_key)?;
         Ok(tx)
     }
+
 
     /// NewCoinbaseTX creates a new coinbase transaction
     pub fn new_coinbase(to: String, mut data: String) -> Result<Transaction> {

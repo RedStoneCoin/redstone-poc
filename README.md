@@ -27,6 +27,9 @@ This is the offical implemention of the redstone protocol. It is written in rust
 - [ ] 2 chain validation (if necesery)
 - [ ] block reward (if necesery)
 - [ ] P2P: In every function add if chain 2 to use utxo1 insted of utxo 2 so add utxo handler
+- [ ] UTXO both chain
+- [ ] DNS SEEDS for p2p
+- [x] Rework mining so it can work with new P2P
 - [x] Simple p2p implemetation of blockchain
 - [x] Signing with wallet and sending txt to the blockchain
 - [x] Simple node

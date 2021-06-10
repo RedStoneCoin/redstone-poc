@@ -24,7 +24,6 @@ impl UTXOSet {
         let mut accumulated = 0;
 
         let db = sled::open("data/utxos")?;
-        let db1 = sled::open("data2/utxos")?;
         for kv in db.iter() {
             let (k, v) = kv?;
             let txid = String::from_utf8(k.to_vec())?;
@@ -42,7 +41,20 @@ impl UTXOSet {
                 }
             }
         }
-        for kv in db1.iter() {
+    
+
+        Ok((accumulated, unspent_outputs))
+    }
+    pub fn find_spendable_outputs1(
+        &self,
+        pub_key_hash: &[u8],
+        amount: i32,
+    ) -> Result<(i32, HashMap<String, Vec<i32>>)> {
+        let mut unspent_outputs: HashMap<String, Vec<i32>> = HashMap::new();
+        let mut accumulated = 0;
+
+        let db = sled::open("data2/utxos")?;
+        for kv in db.iter() {
             let (k, v) = kv?;
             let txid = String::from_utf8(k.to_vec())?;
             let outs: TXOutputs = deserialize(&v.to_vec())?;
@@ -59,9 +71,11 @@ impl UTXOSet {
                 }
             }
         }
+    
 
         Ok((accumulated, unspent_outputs))
     }
+
 
     /// FindUTXO finds UTXO for a public key hash
     pub fn find_UTXO(&self, pub_key_hash: &[u8], chain: i32) -> Result<TXOutputs> {
