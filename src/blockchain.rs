@@ -93,14 +93,21 @@ impl Blockchain {
         bc.db.flush()?;
         Ok(bc)
     }
+    
     pub fn get_best_height1(&self) -> Result<i32> {
+        println!("test2");
+
         let lasthash = if let Some(h) = self.db.get("LAST")? {
             h
         } else {
             return Ok(-1);
         };
+        println!("test3");
         let last_data = self.db.get(lasthash)?.unwrap();
+        println!("test4");
         let last_block: Block = deserialize(&last_data.to_vec())?;
+        println!("test5");
+
         Ok(last_block.get_height())
     }
     /// MineBlock mines a new block with the provided transactions
@@ -140,7 +147,42 @@ impl Blockchain {
         self.tip = newblock.get_hash();
         Ok(newblock)
     }
+    pub fn get_block_other(&self, chain: i32) -> Result<String> {
+        let data = self.db.get("LAST")?.unwrap();
+        let last = deserialize(&data.to_vec())?;
+        Ok(last)
+    }
+    pub fn mine_block_server(&mut self, transactions: Vec<Transaction>, chain: i32, otherhash: String) -> Result<Block> {
+        info!("mine a new block");
+        for tx in &transactions {
+            if !self.verify_transacton(tx)? {
+                return Err(format_err!("ERROR: Invalid transaction"));
+            }
+        }
+        let Header = match chain {
+            1 => "Chain 1",
+            2 => "Chain 2",
+            _ => panic!("Unknown chain index!")
+        };
+        let header = Header.to_string();
 
+
+        let lasthash = self.db.get("LAST")?.unwrap();
+
+        let newblock = Block::new_block(
+            transactions,
+            String::from_utf8(lasthash.to_vec())?,
+            otherhash,
+            String::from(header),
+            self.get_best_height1()? + 1,
+        )?;
+        self.db.insert(newblock.get_hash(), serialize(&newblock)?)?;
+        self.db.insert("LAST", newblock.get_hash().as_bytes())?;
+        self.db.flush()?;
+
+        self.tip = newblock.get_hash();
+        Ok(newblock)
+    }
 
 
 
@@ -244,8 +286,9 @@ impl Blockchain {
             return Ok(());
         }
         self.db.insert(block.get_hash(), data)?;
-
+        println!("test1");
         let lastheight = self.get_best_height1()?;
+        println!("test2");
         if block.get_height() > lastheight {
             self.db.insert("LAST", block.get_hash().as_bytes())?;
             self.tip = block.get_hash();

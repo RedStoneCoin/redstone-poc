@@ -133,18 +133,13 @@ impl Server {
             println!(
                 "Started chain 1 check");
             thread::sleep(Duration::from_millis(1000));
-            server1.request_blocks(1)
-            
+            server2.send_version(KNOWN_NODE1,1)
         });
         thread::spawn(move || {
             println!(
                 "Started chain 2 check");
             thread::sleep(Duration::from_millis(1000));
-            if server2.get_best_height(2)? == -1 {
-                server2.request_blocks(2)
-            }else {
-                server2.send_version(KNOWN_NODE1,2)
-            }
+            server1.send_version(KNOWN_NODE1,2)
         });
         
         // end
@@ -243,7 +238,16 @@ impl Server {
             }_ => panic!("Unknown chain index!")
         }
     }
-
+    fn get_hash_other(&self,chain: i32) ->  Result<String>   {
+        match chain {
+            1 =>{
+                self.inner.lock().unwrap().utxo.blockchain.get_block_other(1)
+            }
+            2 =>{
+                self.inner.lock().unwrap().utxo1.blockchain.get_block_other(2)
+            }_ => panic!("Unknown chain index!")
+        }
+    }
     fn get_block_hashs(&self,chain: i32) -> Vec<String> {
         match chain {
             1 =>{
@@ -277,6 +281,7 @@ impl Server {
     fn add_block(&self, block: Block,chain: i32) -> Result<()> {
         match chain {
             1 =>{
+                
                 self.inner.lock().unwrap().utxo.blockchain.add_block(block)
             }
             
@@ -286,14 +291,15 @@ impl Server {
         }
     }
 
-    fn mine_block(&self, txs: Vec<Transaction,>,chain: i32) -> Result<Block> {
+
+    fn mine_block_other(&self, txs: Vec<Transaction,>,chain: i32,last: String) -> Result<Block> {
         match chain {
             1 =>{
-                self.inner.lock().unwrap().utxo.blockchain.mine_block(txs, chain)
+                self.inner.lock().unwrap().utxo.blockchain.mine_block_server(txs, chain,last)
             }
             
             2 =>{
-                self.inner.lock().unwrap().utxo1.blockchain.mine_block(txs, chain)
+                self.inner.lock().unwrap().utxo1.blockchain.mine_block_server(txs, chain,last)
             }_ => panic!("Unknown chain index!")
         }
     }
@@ -426,10 +432,12 @@ impl Server {
         
         if my_best_height < msg.best_height {
             self.send_get_blocks(&msg.addr_from,msg.chain)?;
-            println!("Syncing....");
+            println!("Syncing");
 
         } else if my_best_height > msg.best_height {
             self.send_version(&msg.addr_from,msg.chain)?;
+            println!("Im longer chain");
+
         }
 
         self.send_addr(&msg.addr_from,msg.chain)?;
@@ -437,6 +445,7 @@ impl Server {
         if !self.node_is_known(&msg.addr_from) {
             self.add_nodes(&msg.addr_from);
         }
+        println!("Synced");
         Ok(())
     }
 
@@ -455,8 +464,9 @@ impl Server {
             msg.addr_from,
             msg.block.get_hash()
         );
-        self.add_block(msg.block,msg.chain)?;
         println!("1");
+        self.add_block(msg.block,msg.chain)?;
+        println!("2");
 
         let mut in_transit = self.get_in_transit();
         if in_transit.len() > 0 {
@@ -467,7 +477,7 @@ impl Server {
         } else {
             self.utxo_reindex(msg.chain)?;
         }
-
+        println!("3");
         Ok(())
     }
 
@@ -521,7 +531,6 @@ impl Server {
  
             println!("Kind: Block1");
             self.send_block(&msg.addr_from, &block,msg.chain)?;
-            println!("Started sending data");
         } else if msg.kind == "tx" {
             let tx = self.get_mempool_tx(&msg.id).unwrap();
             self.send_tx(&msg.addr_from, &tx,msg.chain)?;
@@ -547,6 +556,7 @@ impl Server {
             println!("Current mempool: {:#?}", &mempool);
             if mempool.len() >= 1 && !self.mining_address.is_empty() {
                 loop {
+                    println!("Should start mine");
                     let mut txs = Vec::new();
 
                     for (_, tx) in &mempool {
@@ -566,8 +576,13 @@ impl Server {
                     for tx in &txs {
                         mempool.remove(&tx.id);
                     }
-
-                    let new_block = self.mine_block(txs,msg.chain)?;
+                    let last1 = match msg.chain {
+                        1 => {self.get_hash_other(2)}
+                        2 => {self.get_hash_other(1)}
+                        _ => panic!("Unknown chain index!")
+                    };
+                    let last2 = last1.unwrap().to_string();
+                    let new_block = self.mine_block_other(txs,msg.chain,last2)?;
                     self.utxo_reindex(msg.chain)?;
 
                     for node in self.get_known_nodes() {
