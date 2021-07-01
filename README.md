@@ -10,7 +10,7 @@ This is the offical proof of concept of the redstone protocol. It is written in 
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 4  | ✔️: |              |
+| 4  | ✔️ |              |
 
 
 ## Reporting a Vulnerability
