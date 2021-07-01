@@ -7,11 +7,10 @@ This is the offical proof of concept of the redstone protocol. It is written in 
 
 ## Supported Versions
 
-**NOTE**: There is currently NO supported version of redstone client
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 4  | :y: |              |
+| 4  | ✔️: |              |
 
 
 ## Reporting a Vulnerability
