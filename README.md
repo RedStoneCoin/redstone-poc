@@ -1,7 +1,7 @@
 # Redstone Proof of concpet
 ## Implementation of Redstone protocol
 This is the offical proof of concept of the redstone protocol. It is written in rust. Protocol is subject to frequent change and as such no documention exists (however it is in the works) It is currently not ready for usage.
-- [Build docs](https://github.com/RedStoneCoin/redstone-poc/edit/master/DOCS.md)
+- [Build docs](https://github.com/RedStoneCoin/redstone-poc/master/DOCS.md)
 
 # Security Policy
 
